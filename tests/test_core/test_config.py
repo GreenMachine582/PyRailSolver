@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from app.core.config import Settings
 from app.core.logging import configure_logging
@@ -62,7 +63,7 @@ class TestSettingsOverrides:
             assert Settings(environment=env).environment == env
 
     def test_invalid_environment_raises(self) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             Settings(environment="staging")  # type: ignore[arg-type]
 
 

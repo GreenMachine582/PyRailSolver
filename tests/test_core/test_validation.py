@@ -11,7 +11,7 @@ class TestValidationIssue:
         issue = ValidationIssue(code="X", message="y")
         try:
             issue.code = "Z"  # type: ignore[misc]
-            assert False, "should have raised"
+            raise AssertionError("should have raised")
         except AttributeError:
             pass
 

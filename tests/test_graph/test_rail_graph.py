@@ -15,11 +15,20 @@ def map_data() -> MapData:
             NodeRow(id=3, type=NodeType.junction, x=10, y=7, name="", capacity=1),
         ],
         edges=[
-            EdgeRow(from_id=1, to_id=3, cost=100, distance=8.0, capacity=1, direction=Direction.bidirectional, speed_limit=50),
-            EdgeRow(from_id=3, to_id=2, cost=150, distance=10.0, capacity=1, direction=Direction.bidirectional, speed_limit=50),
+            EdgeRow(
+                from_id=1, to_id=3, cost=100, distance=8.0,
+                capacity=1, direction=Direction.bidirectional, speed_limit=50,
+            ),
+            EdgeRow(
+                from_id=3, to_id=2, cost=150, distance=10.0,
+                capacity=1, direction=Direction.bidirectional, speed_limit=50,
+            ),
         ],
         trains=[
-            TrainRow(id=1, origin_id=1, destination_id=2, cargo="coal", speed=40, spawn_tick=0, priority=1),
+            TrainRow(
+                id=1, origin_id=1, destination_id=2, cargo="coal",
+                speed=40, spawn_tick=0, priority=1,
+            ),
         ],
     )
 

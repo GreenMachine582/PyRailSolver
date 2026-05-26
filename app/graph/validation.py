@@ -11,7 +11,10 @@ def validate_map_data(map_data: MapData) -> ValidationResult:
     if map_data.meta.width <= 0:
         result.add_error("INVALID_WIDTH", f"Map width must be positive, got {map_data.meta.width}")
     if map_data.meta.height <= 0:
-        result.add_error("INVALID_HEIGHT", f"Map height must be positive, got {map_data.meta.height}")
+        result.add_error(
+            "INVALID_HEIGHT",
+            f"Map height must be positive, got {map_data.meta.height}",
+        )
 
     # Node IDs must be unique
     seen_node_ids: set[int] = set()
@@ -92,7 +95,8 @@ def validate_rail_graph(graph: RailGraph, map_data: MapData) -> ValidationResult
         if not graph.has_path(train.origin_id, train.destination_id):
             result.add_error(
                 "NO_PATH",
-                f"Train {train.id}: no path from node {train.origin_id} to node {train.destination_id}",
+                f"Train {train.id}: no path from node {train.origin_id} to node "
+                f"{train.destination_id}",
             )
 
     # Warn about isolated nodes (no connections at all)

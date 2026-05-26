@@ -5,11 +5,11 @@ from app.parser.models import Direction, MapData, NodeType
 
 
 class RailGraph:
-    def __init__(self, graph: nx.DiGraph) -> None:
+    def __init__(self, graph: nx.DiGraph[int]) -> None:
         self._graph = graph
 
     @property
-    def graph(self) -> nx.DiGraph:
+    def graph(self) -> nx.DiGraph[int]:
         return self._graph
 
     @property
@@ -32,63 +32,63 @@ class RailGraph:
         try:
             return self._graph.nodes[node_id]["data"]  # type: ignore[no-any-return]
         except KeyError:
-            raise KeyError(f"Node {node_id} not found in graph")
+            raise KeyError(f"Node {node_id} not found in graph") from None
 
     def edge(self, from_id: int, to_id: int) -> EdgeData:
         try:
             return self._graph.edges[from_id, to_id]["data"]  # type: ignore[no-any-return]
         except KeyError:
-            raise KeyError(f"Edge ({from_id}, {to_id}) not found in graph")
+            raise KeyError(f"Edge ({from_id}, {to_id}) not found in graph") from None
 
     def nodes_of_type(self, node_type: NodeType) -> list[NodeData]:
         return [n for n in self.nodes if n.type == node_type]
 
     def has_path(self, from_id: int, to_id: int) -> bool:
-        return nx.has_path(self._graph, from_id, to_id)  # type: ignore[no-any-return]
+        return nx.has_path(self._graph, from_id, to_id)
 
 
 def build_graph(map_data: MapData) -> RailGraph:
     """Build a directed RailGraph from a parsed MapData object."""
-    g: nx.DiGraph = nx.DiGraph()
+    g: nx.DiGraph[int] = nx.DiGraph()
 
-    for row in map_data.nodes:
+    for node_row in map_data.nodes:
         g.add_node(
-            row.id,
+            node_row.id,
             data=NodeData(
-                id=row.id,
-                type=row.type,
-                x=row.x,
-                y=row.y,
-                name=row.name,
-                capacity=row.capacity,
+                id=node_row.id,
+                type=node_row.type,
+                x=node_row.x,
+                y=node_row.y,
+                name=node_row.name,
+                capacity=node_row.capacity,
             ),
         )
 
-    for row in map_data.edges:
+    for edge_row in map_data.edges:
         fwd = EdgeData(
-            from_id=row.from_id,
-            to_id=row.to_id,
-            cost=row.cost,
-            distance=row.distance,
-            capacity=row.capacity,
-            speed_limit=row.speed_limit,
+            from_id=edge_row.from_id,
+            to_id=edge_row.to_id,
+            cost=edge_row.cost,
+            distance=edge_row.distance,
+            capacity=edge_row.capacity,
+            speed_limit=edge_row.speed_limit,
         )
         rev = EdgeData(
-            from_id=row.to_id,
-            to_id=row.from_id,
-            cost=row.cost,
-            distance=row.distance,
-            capacity=row.capacity,
-            speed_limit=row.speed_limit,
+            from_id=edge_row.to_id,
+            to_id=edge_row.from_id,
+            cost=edge_row.cost,
+            distance=edge_row.distance,
+            capacity=edge_row.capacity,
+            speed_limit=edge_row.speed_limit,
         )
 
-        match row.direction:
+        match edge_row.direction:
             case Direction.forward:
-                g.add_edge(row.from_id, row.to_id, data=fwd)
+                g.add_edge(edge_row.from_id, edge_row.to_id, data=fwd)
             case Direction.reverse:
-                g.add_edge(row.to_id, row.from_id, data=rev)
+                g.add_edge(edge_row.to_id, edge_row.from_id, data=rev)
             case Direction.bidirectional:
-                g.add_edge(row.from_id, row.to_id, data=fwd)
-                g.add_edge(row.to_id, row.from_id, data=rev)
+                g.add_edge(edge_row.from_id, edge_row.to_id, data=fwd)
+                g.add_edge(edge_row.to_id, edge_row.from_id, data=rev)
 
     return RailGraph(g)

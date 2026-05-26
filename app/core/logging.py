@@ -7,7 +7,11 @@ if TYPE_CHECKING:
 
 
 def configure_logging(settings: "Settings") -> None:
-    level = logging.DEBUG if settings.debug else getattr(logging, settings.log_level.upper(), logging.INFO)
+    level = (
+        logging.DEBUG
+        if settings.debug
+        else getattr(logging, settings.log_level.upper(), logging.INFO)
+    )
 
     root = logging.getLogger()
     root.setLevel(level)

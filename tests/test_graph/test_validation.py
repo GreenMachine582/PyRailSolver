@@ -210,7 +210,9 @@ class TestValidateRailGraphWarnings:
             NodeRow(id=2, type=NodeType.station, x=9, y=9, name="B"),
             NodeRow(id=3, type=NodeType.junction, x=5, y=5, name="Orphan"),
         ]
-        edges = [EdgeRow(from_id=1, to_id=2, cost=10, distance=5.0, direction=Direction.bidirectional)]
+        edges = [
+            EdgeRow(from_id=1, to_id=2, cost=10, distance=5.0, direction=Direction.bidirectional),
+        ]
         trains = [TrainRow(id=1, origin_id=1, destination_id=2)]
         data = _make_map(nodes=nodes, edges=edges, trains=trains)
         graph = build_graph(data)

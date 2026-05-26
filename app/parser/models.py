@@ -1,9 +1,9 @@
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel
 
 
-class NodeType(str, Enum):
+class NodeType(StrEnum):
     station = "station"
     platform = "platform"
     junction = "junction"
@@ -12,7 +12,7 @@ class NodeType(str, Enum):
     endpoint = "endpoint"
 
 
-class Direction(str, Enum):
+class Direction(StrEnum):
     bidirectional = "bidirectional"
     forward = "forward"
     reverse = "reverse"

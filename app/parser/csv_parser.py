@@ -1,5 +1,6 @@
 import csv
 import io
+from collections.abc import Mapping
 from pathlib import Path
 
 from app.parser.models import EdgeRow, MapData, MapMeta, NodeRow, TrainRow
@@ -27,7 +28,7 @@ def _parse_csv_block(block: str) -> list[dict[str, str]]:
     return [dict(row) for row in reader]
 
 
-def _clean(row: dict[str, str | None]) -> dict[str, str]:
+def _clean(row: Mapping[str, str | None]) -> dict[str, str]:
     """Strip whitespace and drop empty values so Pydantic uses field defaults."""
     return {k.strip(): v.strip() for k, v in row.items() if v is not None and v.strip()}
 
@@ -37,7 +38,7 @@ def _parse_meta(block: str) -> MapMeta:
     if len(rows) != 1:
         raise MapParseError(f"[map] section must have exactly one data row, got {len(rows)}")
     try:
-        return MapMeta(**_clean(rows[0]))
+        return MapMeta.model_validate(_clean(rows[0]))
     except Exception as exc:
         raise MapParseError(f"Invalid [map] section: {exc}") from exc
 
@@ -46,7 +47,7 @@ def _parse_nodes(block: str) -> list[NodeRow]:
     nodes = []
     for i, row in enumerate(_parse_csv_block(block), start=1):
         try:
-            nodes.append(NodeRow(**_clean(row)))
+            nodes.append(NodeRow.model_validate(_clean(row)))
         except Exception as exc:
             raise MapParseError(f"Invalid node at row {i}: {exc}") from exc
     return nodes
@@ -56,7 +57,7 @@ def _parse_edges(block: str) -> list[EdgeRow]:
     edges = []
     for i, row in enumerate(_parse_csv_block(block), start=1):
         try:
-            edges.append(EdgeRow(**_clean(row)))
+            edges.append(EdgeRow.model_validate(_clean(row)))
         except Exception as exc:
             raise MapParseError(f"Invalid edge at row {i}: {exc}") from exc
     return edges
@@ -66,7 +67,7 @@ def _parse_trains(block: str) -> list[TrainRow]:
     trains = []
     for i, row in enumerate(_parse_csv_block(block), start=1):
         try:
-            trains.append(TrainRow(**_clean(row)))
+            trains.append(TrainRow.model_validate(_clean(row)))
         except Exception as exc:
             raise MapParseError(f"Invalid train at row {i}: {exc}") from exc
     return trains

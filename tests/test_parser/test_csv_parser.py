@@ -165,18 +165,33 @@ class TestParseErrors:
 
     def test_missing_map_section(self, tmp_path: Path) -> None:
         p = tmp_path / "bad.csv"
-        p.write_text("[nodes]\nid,type,x,y\n[edges]\nfrom_id,to_id\n[trains]\nid,origin_id,destination_id\n", encoding="utf-8")
+        content = (
+            "[nodes]\nid,type,x,y\n"
+            "[edges]\nfrom_id,to_id\n"
+            "[trains]\nid,origin_id,destination_id\n"
+        )
+        p.write_text(content, encoding="utf-8")
         with pytest.raises(MapParseError, match=r"\[map\]"):
             parse_map(p)
 
     def test_missing_nodes_section(self, tmp_path: Path) -> None:
         p = tmp_path / "bad.csv"
-        p.write_text("[map]\nname,width,height\nTest,10,10\n[edges]\nfrom_id,to_id\n[trains]\nid,origin_id,destination_id\n", encoding="utf-8")
+        content = (
+            "[map]\nname,width,height\nTest,10,10\n"
+            "[edges]\nfrom_id,to_id\n"
+            "[trains]\nid,origin_id,destination_id\n"
+        )
+        p.write_text(content, encoding="utf-8")
         with pytest.raises(MapParseError, match=r"\[nodes\]"):
             parse_map(p)
 
     def test_map_section_multiple_rows(self, tmp_path: Path) -> None:
-        content = "[map]\nname,width,height\nMap1,10,10\nMap2,20,20\n[nodes]\nid,type,x,y\n[edges]\nfrom_id,to_id\n[trains]\nid,origin_id,destination_id\n"
+        content = (
+            "[map]\nname,width,height\nMap1,10,10\nMap2,20,20\n"
+            "[nodes]\nid,type,x,y\n"
+            "[edges]\nfrom_id,to_id\n"
+            "[trains]\nid,origin_id,destination_id\n"
+        )
         p = tmp_path / "bad.csv"
         p.write_text(content, encoding="utf-8")
         with pytest.raises(MapParseError, match="exactly one"):
@@ -214,18 +229,21 @@ class TestParseErrors:
 
     def test_invalid_meta_field_type(self, tmp_path: Path) -> None:
         p = tmp_path / "bad.csv"
-        p.write_text(VALID_MAP.replace("Tutorial 1,20,15", "Tutorial 1,notanumber,15"), encoding="utf-8")
+        content = VALID_MAP.replace("Tutorial 1,20,15", "Tutorial 1,notanumber,15")
+        p.write_text(content, encoding="utf-8")
         with pytest.raises(MapParseError, match=r"Invalid \[map\]"):
             parse_map(p)
 
     def test_invalid_edge_direction_value(self, tmp_path: Path) -> None:
         p = tmp_path / "bad.csv"
-        p.write_text(VALID_MAP.replace("1,3,100,8,1,bidirectional,50", "1,3,100,8,1,sideways,50"), encoding="utf-8")
+        content = VALID_MAP.replace("1,3,100,8,1,bidirectional,50", "1,3,100,8,1,sideways,50")
+        p.write_text(content, encoding="utf-8")
         with pytest.raises(MapParseError, match="Invalid edge"):
             parse_map(p)
 
     def test_invalid_train_id_type(self, tmp_path: Path) -> None:
         p = tmp_path / "bad.csv"
-        p.write_text(VALID_MAP.replace("1,1,2,coal,40,0,1", "notanint,1,2,coal,40,0,1"), encoding="utf-8")
+        content = VALID_MAP.replace("1,1,2,coal,40,0,1", "notanint,1,2,coal,40,0,1")
+        p.write_text(content, encoding="utf-8")
         with pytest.raises(MapParseError, match="Invalid train"):
             parse_map(p)
