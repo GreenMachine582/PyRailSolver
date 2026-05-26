@@ -328,8 +328,8 @@ mypy app/
 
 **Goal:** Import and represent maps.
 
-- [ ] Project structure and packaging
-- [ ] Configuration system
+- [x] Project structure and packaging
+- [x] Configuration system
 - [ ] CSV parser
 - [ ] Graph model
 - [ ] Validation framework
