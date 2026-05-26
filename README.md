@@ -330,7 +330,7 @@ mypy app/
 
 - [x] Project structure and packaging
 - [x] Configuration system
-- [ ] CSV parser
+- [x] CSV parser
 - [ ] Graph model
 - [ ] Validation framework
 - [ ] Unit tests
