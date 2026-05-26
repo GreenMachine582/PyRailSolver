@@ -86,3 +86,9 @@ class TestConfigureLogging:
         configure_logging(Settings())
         root = logging.getLogger()
         assert any(isinstance(h, logging.StreamHandler) for h in root.handlers)
+
+    def test_adds_handler_when_root_has_none(self) -> None:
+        root = logging.getLogger()
+        root.handlers.clear()
+        configure_logging(Settings())
+        assert any(isinstance(h, logging.StreamHandler) for h in root.handlers)

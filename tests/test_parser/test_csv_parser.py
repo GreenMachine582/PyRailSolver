@@ -211,3 +211,21 @@ class TestParseErrors:
         p.write_text(VALID_MAP.replace("1,1,2,coal", "1,1,99,coal"), encoding="utf-8")
         with pytest.raises(MapParseError, match="destination_id 99"):
             parse_map(p)
+
+    def test_invalid_meta_field_type(self, tmp_path: Path) -> None:
+        p = tmp_path / "bad.csv"
+        p.write_text(VALID_MAP.replace("Tutorial 1,20,15", "Tutorial 1,notanumber,15"), encoding="utf-8")
+        with pytest.raises(MapParseError, match=r"Invalid \[map\]"):
+            parse_map(p)
+
+    def test_invalid_edge_direction_value(self, tmp_path: Path) -> None:
+        p = tmp_path / "bad.csv"
+        p.write_text(VALID_MAP.replace("1,3,100,8,1,bidirectional,50", "1,3,100,8,1,sideways,50"), encoding="utf-8")
+        with pytest.raises(MapParseError, match="Invalid edge"):
+            parse_map(p)
+
+    def test_invalid_train_id_type(self, tmp_path: Path) -> None:
+        p = tmp_path / "bad.csv"
+        p.write_text(VALID_MAP.replace("1,1,2,coal,40,0,1", "notanint,1,2,coal,40,0,1"), encoding="utf-8")
+        with pytest.raises(MapParseError, match="Invalid train"):
+            parse_map(p)

@@ -333,7 +333,7 @@ mypy app/
 - [x] CSV parser
 - [x] Graph model
 - [x] Validation framework
-- [ ] Unit tests
+- [x] Unit tests
 
 **Deliverable:** Load a map and display graph statistics.
 
