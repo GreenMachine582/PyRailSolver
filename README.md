@@ -358,7 +358,7 @@ mypy app/
 
 - [x] Place and label stations
 - [x] Place junctions
-- [ ] Draw track segments
+- [x] Draw track segments
 - [ ] Delete objects
 - [ ] Save/load map files
 

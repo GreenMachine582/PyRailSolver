@@ -46,6 +46,13 @@
                 title="Click grid to place an endpoint">
           <span class="node-dot" style="background:#dc3545"></span>Endpoint
         </button>
+        <button class="btn btn-outline-secondary" data-tool="track"
+                title="Click a node, then click another node to draw a track segment">
+          <svg width="14" height="8" aria-hidden="true" class="me-1" style="vertical-align:middle">
+            <line x1="1" y1="4" x2="13" y2="4" stroke="currentColor"
+                  stroke-width="2.5" stroke-linecap="round"/>
+          </svg>Track
+        </button>
       </div>
       <small id="tool-hint" class="text-muted">Pan mode &mdash; select a tool above to place nodes</small>
     </div>
@@ -56,10 +63,16 @@
   </div>
 
   <div class="col-lg-3">
-    <div class="card">
+    <div class="card mb-2">
       <div class="card-header fw-semibold small">Placed Nodes</div>
       <ul id="editor-node-list" class="list-group list-group-flush">
         <li class="list-group-item text-muted small">No nodes placed yet.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header fw-semibold small">Track Segments</div>
+      <ul id="editor-edge-list" class="list-group list-group-flush">
+        <li class="list-group-item text-muted small">No edges yet.</li>
       </ul>
     </div>
   </div>
@@ -171,6 +184,80 @@
     </div>
   </div>
 </div>
+
+<!-- Draw Track Segment Modal -->
+<div class="modal fade" id="placeEdgeModal" tabindex="-1"
+     aria-labelledby="placeEdgeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title" id="placeEdgeModalLabel">Draw Track Segment</h6>
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+      </div>
+      <div class="modal-body py-3">
+        <form id="place-edge-form"
+              hx-post="/editor/edges"
+              hx-target="#map-canvas"
+              hx-swap="innerHTML">
+          <input type="hidden" name="from_id" id="edge-from-id">
+          <input type="hidden" name="to_id"   id="edge-to-id">
+          <p class="small mb-3">
+            <strong id="edge-from-name">—</strong>
+            <span class="mx-1 text-muted">&harr;</span>
+            <strong id="edge-to-name">—</strong>
+          </p>
+          <div class="mb-3">
+            <p class="form-label small fw-semibold mb-1">Direction</p>
+            <div class="d-flex gap-3">
+              <div class="form-check mb-0">
+                <input class="form-check-input" type="radio" name="direction"
+                       value="bidirectional" id="dir-bidir" checked>
+                <label class="form-check-label small" for="dir-bidir">
+                  &harr; Bidirectional
+                </label>
+              </div>
+              <div class="form-check mb-0">
+                <input class="form-check-input" type="radio" name="direction"
+                       value="forward" id="dir-forward">
+                <label class="form-check-label small" for="dir-forward">
+                  &rarr; One-way
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label for="edge-cost" class="form-label small">Cost</label>
+              <input type="number" class="form-control form-control-sm" id="edge-cost"
+                     name="cost" value="0" min="0">
+            </div>
+            <div class="col-6">
+              <label for="edge-distance" class="form-label small">Distance</label>
+              <input type="number" class="form-control form-control-sm" id="edge-distance"
+                     name="distance" value="1.0" min="0.1" step="0.1">
+            </div>
+            <div class="col-6">
+              <label for="edge-capacity" class="form-label small">Capacity</label>
+              <input type="number" class="form-control form-control-sm" id="edge-capacity"
+                     name="capacity" value="1" min="1">
+            </div>
+            <div class="col-6">
+              <label for="edge-speed" class="form-label small">Speed limit</label>
+              <input type="number" class="form-control form-control-sm" id="edge-speed"
+                     name="speed_limit" value="100" min="1">
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm">Draw</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -178,40 +265,81 @@
   document.addEventListener('DOMContentLoaded', () => {
     let pzWheelHandler = null
     let activeTool = 'pan'
+    let pointerDownAt = null
+    let trackFrom = null       // { id, name } of the first node selected in track mode
+    let trackFromEl = null     // the <circle> element to un-highlight on cancel
 
     const canvas = document.getElementById('map-canvas')
 
-    // Types that require a name prompt (modal); the rest are placed directly
     const NAMED_TYPES = new Set(['station', 'platform', 'depot', 'endpoint'])
 
     const NODE_TYPE_META = {
-      station:  { label: 'Station',  placeholder: 'e.g. Coal Mine',     hint: '(required)', toolHint: 'Click grid to place a station' },
-      platform: { label: 'Platform', placeholder: 'e.g. Mine Platform', hint: '(optional)', toolHint: 'Click grid to place a platform' },
-      junction: { label: 'Junction', placeholder: '',                   hint: '(optional)', toolHint: 'Click grid to place a junction (no name required)' },
-      depot:    { label: 'Depot',    placeholder: 'e.g. Yard',          hint: '(optional)', toolHint: 'Click grid to place a depot' },
-      waypoint: { label: 'Waypoint', placeholder: '',                   hint: '(optional)', toolHint: 'Click grid to place a waypoint (no name required)' },
-      endpoint: { label: 'Endpoint', placeholder: 'e.g. North Siding',  hint: '(optional)', toolHint: 'Click grid to place an endpoint' },
+      station:  { label: 'Station',  placeholder: 'e.g. Coal Mine',     hint: '(required)' },
+      platform: { label: 'Platform', placeholder: 'e.g. Mine Platform', hint: '(optional)' },
+      junction: { label: 'Junction', placeholder: '',                   hint: '(optional)' },
+      depot:    { label: 'Depot',    placeholder: 'e.g. Yard',          hint: '(optional)' },
+      waypoint: { label: 'Waypoint', placeholder: '',                   hint: '(optional)' },
+      endpoint: { label: 'Endpoint', placeholder: 'e.g. North Siding',  hint: '(optional)' },
+    }
+
+    const TOOL_HINTS = {
+      pan:      'Pan mode — select a tool above to place nodes',
+      station:  'Click grid to place a station',
+      platform: 'Click grid to place a platform',
+      junction: 'Click grid to place a junction (no name required)',
+      depot:    'Click grid to place a depot',
+      waypoint: 'Click grid to place a waypoint (no name required)',
+      endpoint: 'Click grid to place an endpoint',
+      track:    'Click a node to start a track segment',
     }
 
     function initCanvas() {
       const svg = document.getElementById('map-svg')
       if (!svg) return
-
       const pz = Panzoom(svg, { maxScale: 8, minScale: 0.25 })
       if (pzWheelHandler) canvas.removeEventListener('wheel', pzWheelHandler)
       pzWheelHandler = pz.zoomWithWheel
       canvas.addEventListener('wheel', pzWheelHandler, { passive: false })
-
       document.getElementById('btn-zoom-in').onclick  = pz.zoomIn
       document.getElementById('btn-zoom-out').onclick = pz.zoomOut
       document.getElementById('btn-zoom-reset').onclick = pz.reset
-
       document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
         new bootstrap.Popover(el, { trigger: 'hover', html: false })
       })
     }
 
     initCanvas()
+
+    // --- track selection helpers ---
+
+    function clearTrackFrom() {
+      if (trackFromEl) {
+        trackFromEl.style.stroke = ''
+        trackFromEl.style.strokeWidth = ''
+        trackFromEl = null
+      }
+      trackFrom = null
+      document.getElementById('tool-hint').textContent = TOOL_HINTS.track
+    }
+
+    function selectTrackFrom(el) {
+      clearTrackFrom()
+      el.style.stroke = '#ffc107'
+      el.style.strokeWidth = '4'
+      trackFromEl = el
+      trackFrom = { id: parseInt(el.dataset.nodeId), name: el.dataset.bsTitle || `Node ${el.dataset.nodeId}` }
+      document.getElementById('tool-hint').textContent =
+        `From: ${trackFrom.name} — click another node to connect, or click away to cancel`
+    }
+
+    // --- modal setup ---
+
+    const placeModal = new bootstrap.Modal(document.getElementById('placeNodeModal'))
+    const placeEdgeModal = new bootstrap.Modal(document.getElementById('placeEdgeModal'))
+
+    document.getElementById('placeEdgeModal').addEventListener('hidden.bs.modal', clearTrackFrom)
+
+    // --- node-type modal helpers ---
 
     function syncModalForType() {
       const radio = document.querySelector('input[name="node_type"]:checked')
@@ -223,20 +351,27 @@
       document.getElementById('name-hint').textContent = meta.hint
     }
 
+    document.querySelectorAll('input[name="node_type"]').forEach(r => {
+      r.addEventListener('change', () => {
+        activeTool = r.value
+        updateToolbarButtons(r.value)
+        syncModalForType()
+      })
+    })
+
+    // --- toolbar ---
+
     function updateToolbarButtons(tool) {
       document.querySelectorAll('#tool-group [data-tool]').forEach(btn => {
-        const active = btn.dataset.tool === tool
-        btn.classList.toggle('btn-secondary', active)
-        btn.classList.toggle('btn-outline-secondary', !active)
+        btn.classList.toggle('btn-secondary', btn.dataset.tool === tool)
+        btn.classList.toggle('btn-outline-secondary', btn.dataset.tool !== tool)
       })
       canvas.classList.toggle('placing-mode', tool !== 'pan')
-      const meta = NODE_TYPE_META[tool]
-      document.getElementById('tool-hint').textContent = meta
-        ? meta.toolHint
-        : 'Pan mode — select a tool above to place nodes'
+      document.getElementById('tool-hint').textContent = TOOL_HINTS[tool] ?? ''
     }
 
     function setActiveTool(tool) {
+      clearTrackFrom()
       activeTool = tool
       updateToolbarButtons(tool)
       const radio = document.getElementById(`nt-${tool}`)
@@ -248,37 +383,8 @@
       btn.addEventListener('click', () => setActiveTool(btn.dataset.tool))
     })
 
-    // Changing the radio in the modal syncs back to the toolbar
-    document.querySelectorAll('input[name="node_type"]').forEach(r => {
-      r.addEventListener('change', () => {
-        activeTool = r.value
-        updateToolbarButtons(r.value)
-        syncModalForType()
-      })
-    })
+    // --- pointer capture handlers (run before Panzoom in capture phase) ---
 
-    const placeModal = new bootstrap.Modal(document.getElementById('placeNodeModal'))
-    let pointerDownAt = null
-
-    function handleGridClick(gx, gy) {
-      if (NAMED_TYPES.has(activeTool)) {
-        document.getElementById('node-x').value = gx
-        document.getElementById('node-y').value = gy
-        document.getElementById('node-name').value = ''
-        placeModal.show()
-        setTimeout(() => document.getElementById('node-name').focus(), 300)
-      } else {
-        htmx.ajax('POST', '/editor/nodes', {
-          target: '#map-canvas',
-          swap: 'innerHTML',
-          values: { node_type: activeTool, x: String(gx), y: String(gy), name: '' },
-        }).then(() => initCanvas())
-      }
-    }
-
-    // Capture-phase handlers fire BEFORE Panzoom's pointerdown listener on the SVG.
-    // stopPropagation in capture prevents the event reaching the SVG child entirely,
-    // so Panzoom never starts a pan gesture when a placement tool is active.
     canvas.addEventListener('pointerdown', (e) => {
       if (activeTool === 'pan') return
       pointerDownAt = { x: e.clientX, y: e.clientY }
@@ -291,6 +397,35 @@
       pointerDownAt = null
       e.stopPropagation()
       if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 4) return
+
+      // --- track tool: click-to-click node wiring ---
+      if (activeTool === 'track') {
+        if (e.target.closest('g.edges')) return
+        const nodeEl = e.target.closest('[data-node-id]')
+        if (!nodeEl) { clearTrackFrom(); return }
+
+        const nodeId = parseInt(nodeEl.dataset.nodeId)
+        if (!trackFrom) {
+          selectTrackFrom(nodeEl)
+        } else if (trackFrom.id === nodeId) {
+          clearTrackFrom()
+        } else {
+          const toName = nodeEl.dataset.bsTitle || `Node ${nodeId}`
+          document.getElementById('edge-from-id').value = trackFrom.id
+          document.getElementById('edge-to-id').value   = nodeId
+          document.getElementById('edge-from-name').textContent = trackFrom.name
+          document.getElementById('edge-to-name').textContent   = toName
+          document.getElementById('dir-bidir').checked = true
+          document.getElementById('edge-cost').value     = '0'
+          document.getElementById('edge-distance').value = '1.0'
+          document.getElementById('edge-capacity').value = '1'
+          document.getElementById('edge-speed').value    = '100'
+          placeEdgeModal.show()
+        }
+        return
+      }
+
+      // --- node placement tools: click on empty grid ---
       if (e.target.closest('g.nodes') || e.target.closest('g.edges')) return
 
       const svg = document.getElementById('map-svg')
@@ -305,13 +440,30 @@
       const gx = Math.round((svgPt.x - PAD) / SCALE)
       const gy = Math.round((svgPt.y - PAD) / SCALE)
       if (gx < 0 || gx >= W || gy < 0 || gy >= H) return
-      handleGridClick(gx, gy)
+
+      if (NAMED_TYPES.has(activeTool)) {
+        document.getElementById('node-x').value = gx
+        document.getElementById('node-y').value = gy
+        document.getElementById('node-name').value = ''
+        placeModal.show()
+        setTimeout(() => document.getElementById('node-name').focus(), 300)
+      } else {
+        htmx.ajax('POST', '/editor/nodes', {
+          target: '#map-canvas',
+          swap: 'innerHTML',
+          values: { node_type: activeTool, x: String(gx), y: String(gy), name: '' },
+        }).then(() => initCanvas())
+      }
     }, true)
 
     canvas.addEventListener('pointercancel', () => { pointerDownAt = null }, true)
 
     document.getElementById('place-node-form').addEventListener('htmx:afterRequest', (e) => {
       if (e.detail.successful) { placeModal.hide(); initCanvas() }
+    })
+
+    document.getElementById('place-edge-form').addEventListener('htmx:afterRequest', (e) => {
+      if (e.detail.successful) { placeEdgeModal.hide(); clearTrackFrom(); initCanvas() }
     })
   })
 </script>

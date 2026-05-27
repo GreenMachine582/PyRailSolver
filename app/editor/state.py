@@ -1,4 +1,4 @@
-from app.parser.models import EdgeRow, MapData, MapMeta, NodeRow, NodeType
+from app.parser.models import Direction, EdgeRow, MapData, MapMeta, NodeRow, NodeType
 
 
 class EditorState:
@@ -31,6 +31,28 @@ class EditorState:
 
     def node_at(self, x: int, y: int) -> NodeRow | None:
         return next((n for n in self._nodes if n.x == x and n.y == y), None)
+
+    def add_edge(
+        self,
+        from_id: int,
+        to_id: int,
+        direction: Direction = Direction.bidirectional,
+        cost: int = 0,
+        distance: float = 1.0,
+        capacity: int = 1,
+        speed_limit: int = 100,
+    ) -> EdgeRow:
+        edge = EdgeRow(
+            from_id=from_id,
+            to_id=to_id,
+            direction=direction,
+            cost=cost,
+            distance=distance,
+            capacity=capacity,
+            speed_limit=speed_limit,
+        )
+        self._edges.append(edge)
+        return edge
 
 
 editor = EditorState()

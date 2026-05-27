@@ -1,5 +1,5 @@
 from app.editor.state import EditorState
-from app.parser.models import NodeType
+from app.parser.models import Direction, NodeType
 
 
 class TestEditorState:
@@ -119,3 +119,79 @@ class TestEditorState:
         assert nodes[0].type == NodeType.station
         assert nodes[1].type == NodeType.junction
         assert nodes[2].type == NodeType.depot
+
+
+class TestAddEdge:
+    def test_add_edge_returns_edge(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0, "A")
+        s.add_node(NodeType.station, 5, 5, "B")
+        edge = s.add_edge(1, 2)
+        assert edge.from_id == 1
+        assert edge.to_id == 2
+
+    def test_add_edge_stored_in_map_data(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0, "A")
+        s.add_node(NodeType.station, 5, 5, "B")
+        s.add_edge(1, 2)
+        assert len(s.map_data.edges) == 1
+
+    def test_add_edge_default_direction_bidirectional(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0)
+        s.add_node(NodeType.station, 5, 5)
+        edge = s.add_edge(1, 2)
+        assert edge.direction == Direction.bidirectional
+
+    def test_add_edge_custom_direction_forward(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0)
+        s.add_node(NodeType.station, 5, 5)
+        edge = s.add_edge(1, 2, direction=Direction.forward)
+        assert edge.direction == Direction.forward
+
+    def test_add_edge_custom_cost(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0)
+        s.add_node(NodeType.station, 5, 5)
+        edge = s.add_edge(1, 2, cost=75)
+        assert edge.cost == 75
+
+    def test_add_edge_custom_distance(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0)
+        s.add_node(NodeType.station, 5, 5)
+        edge = s.add_edge(1, 2, distance=3.5)
+        assert edge.distance == 3.5
+
+    def test_add_edge_custom_capacity(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0)
+        s.add_node(NodeType.station, 5, 5)
+        edge = s.add_edge(1, 2, capacity=4)
+        assert edge.capacity == 4
+
+    def test_add_edge_custom_speed_limit(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0)
+        s.add_node(NodeType.station, 5, 5)
+        edge = s.add_edge(1, 2, speed_limit=80)
+        assert edge.speed_limit == 80
+
+    def test_map_data_edges_is_copy(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0)
+        s.add_node(NodeType.station, 5, 5)
+        s.add_edge(1, 2)
+        edges = s.map_data.edges
+        edges.clear()
+        assert len(s.map_data.edges) == 1
+
+    def test_reset_clears_edges(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0)
+        s.add_node(NodeType.station, 5, 5)
+        s.add_edge(1, 2)
+        s.reset()
+        assert s.map_data.edges == []

@@ -96,6 +96,7 @@ def render_map(map_data: MapData, graph: RailGraph) -> str:
         parts.append(
             f'<circle cx="{cx}" cy="{cy}" r="{_R}"'
             f' fill="{color}" stroke="white" stroke-width="2"'
+            f' data-node-id="{node.id}"'
             f' tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover"'
             f' data-bs-placement="top" data-bs-title="{label}"'
             f' data-bs-content="{content}"/>'

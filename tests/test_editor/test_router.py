@@ -143,3 +143,115 @@ class TestAddNode:
         r = client.post("/editor/nodes", data={"x": "1", "y": "1", "name": "T"})
         assert 'data-scale="40"' in r.text
         assert 'data-pad="30"' in r.text
+
+
+class TestEditorTrackTool:
+    def test_toolbar_has_track_button(self, client: TestClient) -> None:
+        assert 'data-tool="track"' in client.get("/editor").text
+
+    def test_edge_modal_present(self, client: TestClient) -> None:
+        assert "placeEdgeModal" in client.get("/editor").text
+
+    def test_edge_modal_has_direction_field(self, client: TestClient) -> None:
+        text = client.get("/editor").text
+        assert 'name="direction"' in text
+        assert 'value="bidirectional"' in text
+
+    def test_edge_modal_has_cost_field(self, client: TestClient) -> None:
+        assert 'name="cost"' in client.get("/editor").text
+
+    def test_edge_modal_has_distance_field(self, client: TestClient) -> None:
+        assert 'name="distance"' in client.get("/editor").text
+
+    def test_edge_modal_has_capacity_field(self, client: TestClient) -> None:
+        assert 'name="capacity"' in client.get("/editor").text
+
+    def test_edge_modal_has_speed_limit_field(self, client: TestClient) -> None:
+        assert 'name="speed_limit"' in client.get("/editor").text
+
+    def test_edge_list_sidebar_present(self, client: TestClient) -> None:
+        assert 'id="editor-edge-list"' in client.get("/editor").text
+
+
+class TestAddEdge:
+    def _add_two_nodes(self, client: TestClient) -> None:
+        client.post("/editor/nodes", data={"x": "1", "y": "1", "name": "A"})
+        client.post("/editor/nodes", data={"x": "5", "y": "5", "name": "B"})
+
+    def test_returns_200(self, client: TestClient) -> None:
+        self._add_two_nodes(client)
+        r = client.post("/editor/edges", data={"from_id": "1", "to_id": "2"})
+        assert r.status_code == 200
+
+    def test_edge_appears_in_svg(self, client: TestClient) -> None:
+        self._add_two_nodes(client)
+        r = client.post("/editor/edges", data={"from_id": "1", "to_id": "2"})
+        assert "<line" in r.text or "<polyline" in r.text
+
+    def test_edge_list_updated(self, client: TestClient) -> None:
+        self._add_two_nodes(client)
+        r = client.post("/editor/edges", data={"from_id": "1", "to_id": "2"})
+        assert "editor-edge-list" in r.text
+
+    def test_bidirectional_edge_in_edge_list(self, client: TestClient) -> None:
+        self._add_two_nodes(client)
+        r = client.post(
+            "/editor/edges",
+            data={"from_id": "1", "to_id": "2", "direction": "bidirectional"},
+        )
+        assert "&harr;" in r.text
+
+    def test_forward_edge_in_edge_list(self, client: TestClient) -> None:
+        self._add_two_nodes(client)
+        r = client.post(
+            "/editor/edges",
+            data={"from_id": "1", "to_id": "2", "direction": "forward"},
+        )
+        assert "&rarr;" in r.text
+
+    def test_forward_edge_uses_polyline(self, client: TestClient) -> None:
+        self._add_two_nodes(client)
+        r = client.post(
+            "/editor/edges",
+            data={"from_id": "1", "to_id": "2", "direction": "forward"},
+        )
+        assert "<polyline" in r.text
+
+    def test_from_id_not_found_returns_422(self, client: TestClient) -> None:
+        self._add_two_nodes(client)
+        r = client.post("/editor/edges", data={"from_id": "99", "to_id": "2"})
+        assert r.status_code == 422
+
+    def test_to_id_not_found_returns_422(self, client: TestClient) -> None:
+        self._add_two_nodes(client)
+        r = client.post("/editor/edges", data={"from_id": "1", "to_id": "99"})
+        assert r.status_code == 422
+
+    def test_same_id_returns_422(self, client: TestClient) -> None:
+        self._add_two_nodes(client)
+        r = client.post("/editor/edges", data={"from_id": "1", "to_id": "1"})
+        assert r.status_code == 422
+
+    def test_invalid_direction_returns_422(self, client: TestClient) -> None:
+        self._add_two_nodes(client)
+        r = client.post(
+            "/editor/edges",
+            data={"from_id": "1", "to_id": "2", "direction": "sideways"},
+        )
+        assert r.status_code == 422
+
+    def test_custom_cost_reflected_in_svg(self, client: TestClient) -> None:
+        self._add_two_nodes(client)
+        r = client.post(
+            "/editor/edges",
+            data={"from_id": "1", "to_id": "2", "cost": "50"},
+        )
+        assert "Cost: 50" in r.text
+
+    def test_custom_speed_limit_reflected_in_svg(self, client: TestClient) -> None:
+        self._add_two_nodes(client)
+        r = client.post(
+            "/editor/edges",
+            data={"from_id": "1", "to_id": "2", "speed_limit": "80"},
+        )
+        assert "Speed: 80" in r.text

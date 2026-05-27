@@ -3,9 +3,22 @@
   {% for node in map_data.nodes %}
   <li class="list-group-item d-flex justify-content-between align-items-center py-1 small">
     <span>{{ node.name or "(unnamed)" }}</span>
-    <span class="text-muted">({{ node.x }}, {{ node.y }})</span>
+    <span class="text-muted">{{ node.type.value }} ({{ node.x }}, {{ node.y }})</span>
   </li>
   {% else %}
   <li class="list-group-item text-muted small">No nodes placed yet.</li>
+  {% endfor %}
+</ul>
+<ul id="editor-edge-list" class="list-group list-group-flush" hx-swap-oob="true">
+  {% for edge in map_data.edges %}
+  <li class="list-group-item py-1 small">
+    <span class="text-muted">
+      {% for n in map_data.nodes if n.id == edge.from_id %}{{ n.name or n.type.value }}{% endfor %}
+      {% if edge.direction.value == "bidirectional" %}&harr;{% else %}&rarr;{% endif %}
+      {% for n in map_data.nodes if n.id == edge.to_id %}{{ n.name or n.type.value }}{% endfor %}
+    </span>
+  </li>
+  {% else %}
+  <li class="list-group-item text-muted small">No edges yet.</li>
   {% endfor %}
 </ul>

@@ -196,3 +196,9 @@ class TestRenderMap:
         svg = render_map(map_data, build_graph(map_data))
         assert 'A&quot;B' in svg
         assert 'A"B' not in svg
+
+    def test_node_has_data_node_id(self) -> None:
+        map_data = _make_map()
+        svg = render_map(map_data, build_graph(map_data))
+        assert 'data-node-id="1"' in svg
+        assert 'data-node-id="2"' in svg
