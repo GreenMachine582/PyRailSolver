@@ -11,10 +11,19 @@
   cursor: grabbing;
 }
 
-.editor-mode svg {
+.placing-mode svg {
   cursor: crosshair;
 }
 
-.editor-mode svg:active {
+.placing-mode svg:active {
   cursor: crosshair;
+}
+
+.node-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 2px;
 }

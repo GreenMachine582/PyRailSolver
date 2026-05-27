@@ -24,6 +24,17 @@ class TestEditorPage:
         for nt in ("station", "platform", "junction", "depot", "waypoint", "endpoint"):
             assert f'value="{nt}"' in text
 
+    def test_contains_toolbar(self, client: TestClient) -> None:
+        assert 'id="tool-group"' in client.get("/editor").text
+
+    def test_toolbar_has_all_tool_buttons(self, client: TestClient) -> None:
+        text = client.get("/editor").text
+        for tool in ("pan", "station", "platform", "junction", "depot", "waypoint", "endpoint"):
+            assert f'data-tool="{tool}"' in text
+
+    def test_contains_direct_place_form(self, client: TestClient) -> None:
+        assert 'id="direct-place-form"' in client.get("/editor").text
+
     def test_empty_node_list(self, client: TestClient) -> None:
         assert "No nodes placed yet" in client.get("/editor").text
 
@@ -54,6 +65,22 @@ class TestAddNode:
         )
         assert r.status_code == 200
         assert "#6c757d" in r.text  # junction colour
+
+    def test_junction_no_name_direct_place(self, client: TestClient) -> None:
+        r = client.post(
+            "/editor/nodes",
+            data={"x": "8", "y": "8", "node_type": "junction", "name": ""},
+        )
+        assert r.status_code == 200
+        assert "#6c757d" in r.text
+
+    def test_waypoint_no_name_direct_place(self, client: TestClient) -> None:
+        r = client.post(
+            "/editor/nodes",
+            data={"x": "9", "y": "9", "node_type": "waypoint", "name": ""},
+        )
+        assert r.status_code == 200
+        assert "#198754" in r.text
 
     def test_explicit_node_type_platform(self, client: TestClient) -> None:
         r = client.post(

@@ -11,45 +11,47 @@
 <div class="row g-3">
 
   <div class="col-lg-9">
-    <div class="d-flex align-items-center gap-2 mb-2">
-      <div class="btn-group btn-group-sm" role="group" aria-label="Map zoom controls">
+    <!-- Toolbar -->
+    <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+      <div class="btn-group btn-group-sm" role="group" aria-label="Zoom controls">
         <button id="btn-zoom-in"    class="btn btn-outline-secondary" title="Zoom in">+</button>
         <button id="btn-zoom-out"   class="btn btn-outline-secondary" title="Zoom out">&minus;</button>
         <button id="btn-zoom-reset" class="btn btn-outline-secondary" title="Reset view">&#8857;</button>
       </div>
-      <small class="text-muted">Click grid to place a node &bull; scroll to zoom &bull; drag to pan</small>
+      <div class="vr"></div>
+      <div class="btn-group btn-group-sm" role="group" id="tool-group" aria-label="Placement tool">
+        <button class="btn btn-secondary" data-tool="pan"
+                title="Pan and zoom — click does not place nodes">&#8598; Pan</button>
+        <button class="btn btn-outline-secondary" data-tool="station"
+                title="Click grid to place a station">
+          <span class="node-dot" style="background:#0d6efd"></span>Station
+        </button>
+        <button class="btn btn-outline-secondary" data-tool="platform"
+                title="Click grid to place a platform">
+          <span class="node-dot" style="background:#6ea8fe"></span>Platform
+        </button>
+        <button class="btn btn-outline-secondary" data-tool="junction"
+                title="Click grid to place a junction">
+          <span class="node-dot" style="background:#6c757d"></span>Junction
+        </button>
+        <button class="btn btn-outline-secondary" data-tool="depot"
+                title="Click grid to place a depot">
+          <span class="node-dot" style="background:#fd7e14"></span>Depot
+        </button>
+        <button class="btn btn-outline-secondary" data-tool="waypoint"
+                title="Click grid to place a waypoint">
+          <span class="node-dot" style="background:#198754"></span>Waypoint
+        </button>
+        <button class="btn btn-outline-secondary" data-tool="endpoint"
+                title="Click grid to place an endpoint">
+          <span class="node-dot" style="background:#dc3545"></span>Endpoint
+        </button>
+      </div>
+      <small class="text-muted">scroll to zoom &bull; drag to pan</small>
     </div>
 
-    <div id="map-canvas" class="map-canvas border rounded bg-light overflow-hidden editor-mode">
+    <div id="map-canvas" class="map-canvas border rounded bg-light overflow-hidden">
       {{ svg | safe }}
-    </div>
-
-    <div class="mt-3 d-flex flex-wrap align-items-center gap-3">
-      <span class="text-muted small fw-semibold">Node types:</span>
-      <span class="d-flex align-items-center gap-1">
-        <svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#0d6efd" stroke="white" stroke-width="1.5"/></svg>
-        <small class="text-muted">Station</small>
-      </span>
-      <span class="d-flex align-items-center gap-1">
-        <svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#6ea8fe" stroke="white" stroke-width="1.5"/></svg>
-        <small class="text-muted">Platform</small>
-      </span>
-      <span class="d-flex align-items-center gap-1">
-        <svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#6c757d" stroke="white" stroke-width="1.5"/></svg>
-        <small class="text-muted">Junction</small>
-      </span>
-      <span class="d-flex align-items-center gap-1">
-        <svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#fd7e14" stroke="white" stroke-width="1.5"/></svg>
-        <small class="text-muted">Depot</small>
-      </span>
-      <span class="d-flex align-items-center gap-1">
-        <svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#198754" stroke="white" stroke-width="1.5"/></svg>
-        <small class="text-muted">Waypoint</small>
-      </span>
-      <span class="d-flex align-items-center gap-1">
-        <svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#dc3545" stroke="white" stroke-width="1.5"/></svg>
-        <small class="text-muted">Endpoint</small>
-      </span>
     </div>
   </div>
 
@@ -64,7 +66,19 @@
 
 </div>
 
-<!-- Place Node Modal -->
+<!-- Hidden form for direct (no-modal) placement — used for junction and waypoint -->
+<form id="direct-place-form"
+      hx-post="/editor/nodes"
+      hx-target="#map-canvas"
+      hx-swap="innerHTML"
+      class="d-none">
+  <input type="hidden" id="dp-node-type" name="node_type" value="junction">
+  <input type="hidden" id="dp-x" name="x" value="0">
+  <input type="hidden" id="dp-y" name="y" value="0">
+  <input type="hidden" name="name" value="">
+</form>
+
+<!-- Place Node Modal (named types: station, platform, depot, endpoint) -->
 <div class="modal fade" id="placeNodeModal" tabindex="-1"
      aria-labelledby="placeNodeModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-sm">
@@ -175,13 +189,27 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     let pzWheelHandler = null
+    let activeTool = 'pan'
+
+    const canvas = document.getElementById('map-canvas')
+
+    // Types that require a name prompt (modal); the rest are placed directly
+    const NAMED_TYPES = new Set(['station', 'platform', 'depot', 'endpoint'])
+
+    const NODE_TYPE_META = {
+      station:  { label: 'Station',  placeholder: 'e.g. Coal Mine',     hint: '(required)' },
+      platform: { label: 'Platform', placeholder: 'e.g. Mine Platform', hint: '(optional)' },
+      junction: { label: 'Junction', placeholder: '',                   hint: '(optional)' },
+      depot:    { label: 'Depot',    placeholder: 'e.g. Yard',          hint: '(optional)' },
+      waypoint: { label: 'Waypoint', placeholder: '',                   hint: '(optional)' },
+      endpoint: { label: 'Endpoint', placeholder: 'e.g. North Siding',  hint: '(optional)' },
+    }
 
     function initCanvas() {
       const svg = document.getElementById('map-svg')
       if (!svg) return
 
       const pz = Panzoom(svg, { maxScale: 8, minScale: 0.25 })
-      const canvas = document.getElementById('map-canvas')
       if (pzWheelHandler) canvas.removeEventListener('wheel', pzWheelHandler)
       pzWheelHandler = pz.zoomWithWheel
       canvas.addEventListener('wheel', pzWheelHandler, { passive: false })
@@ -197,16 +225,6 @@
 
     initCanvas()
 
-    // Node type metadata: title, name placeholder, whether name is required
-    const NODE_TYPE_META = {
-      station:  { label: 'Station',  placeholder: 'e.g. Coal Mine',     hint: '(required)' },
-      platform: { label: 'Platform', placeholder: 'e.g. Mine Platform', hint: '(optional)' },
-      junction: { label: 'Junction', placeholder: '',                   hint: '(optional)' },
-      depot:    { label: 'Depot',    placeholder: 'e.g. Yard',          hint: '(optional)' },
-      waypoint: { label: 'Waypoint', placeholder: '',                   hint: '(optional)' },
-      endpoint: { label: 'Endpoint', placeholder: 'e.g. North Siding',  hint: '(optional)' },
-    }
-
     function syncModalForType() {
       const radio = document.querySelector('input[name="node_type"]:checked')
       if (!radio) return
@@ -217,29 +235,54 @@
       document.getElementById('name-hint').textContent = meta.hint
     }
 
+    function updateToolbarButtons(tool) {
+      document.querySelectorAll('#tool-group [data-tool]').forEach(btn => {
+        const active = btn.dataset.tool === tool
+        btn.classList.toggle('btn-secondary', active)
+        btn.classList.toggle('btn-outline-secondary', !active)
+      })
+      canvas.classList.toggle('placing-mode', tool !== 'pan')
+    }
+
+    function setActiveTool(tool) {
+      activeTool = tool
+      updateToolbarButtons(tool)
+      const radio = document.getElementById(`nt-${tool}`)
+      if (radio) radio.checked = true
+      syncModalForType()
+    }
+
+    document.querySelectorAll('#tool-group [data-tool]').forEach(btn => {
+      btn.addEventListener('click', () => setActiveTool(btn.dataset.tool))
+    })
+
+    // Changing the radio in the modal syncs back to the toolbar
     document.querySelectorAll('input[name="node_type"]').forEach(r => {
-      r.addEventListener('change', syncModalForType)
+      r.addEventListener('change', () => {
+        activeTool = r.value
+        updateToolbarButtons(r.value)
+        syncModalForType()
+      })
     })
 
     // Distinguish click from drag
     let mouseDownAt = { x: 0, y: 0 }
-    const canvas = document.getElementById('map-canvas')
     canvas.addEventListener('mousedown', (e) => { mouseDownAt = { x: e.clientX, y: e.clientY } })
 
-    // Place node on grid click
     const placeModal = new bootstrap.Modal(document.getElementById('placeNodeModal'))
 
     canvas.addEventListener('click', (e) => {
+      if (activeTool === 'pan') return
       if (Math.hypot(e.clientX - mouseDownAt.x, e.clientY - mouseDownAt.y) > 4) return
       if (e.target.closest('g.nodes') || e.target.closest('g.edges')) return
 
       const svg = document.getElementById('map-svg')
       if (!svg) return
 
-      const PAD   = parseInt(svg.dataset.pad,    10)
-      const SCALE = parseInt(svg.dataset.scale,  10)
-      const W     = parseInt(svg.dataset.gridW,  10)
-      const H     = parseInt(svg.dataset.gridH,  10)
+      const PAD   = parseInt(svg.dataset.pad,   10)
+      const SCALE = parseInt(svg.dataset.scale, 10)
+      const W     = parseInt(svg.dataset.gridW, 10)
+      const H     = parseInt(svg.dataset.gridH, 10)
 
       const pt = svg.createSVGPoint()
       pt.x = e.clientX; pt.y = e.clientY
@@ -248,17 +291,27 @@
       const gy = Math.round((svgPt.y - PAD) / SCALE)
       if (gx < 0 || gx >= W || gy < 0 || gy >= H) return
 
-      document.getElementById('node-x').value = gx
-      document.getElementById('node-y').value = gy
-      document.getElementById('node-name').value = ''
-      syncModalForType()
-      placeModal.show()
-      setTimeout(() => document.getElementById('node-name').focus(), 300)
+      if (NAMED_TYPES.has(activeTool)) {
+        document.getElementById('node-x').value = gx
+        document.getElementById('node-y').value = gy
+        document.getElementById('node-name').value = ''
+        placeModal.show()
+        setTimeout(() => document.getElementById('node-name').focus(), 300)
+      } else {
+        // Junction and waypoint: place immediately without modal
+        document.getElementById('dp-node-type').value = activeTool
+        document.getElementById('dp-x').value = gx
+        document.getElementById('dp-y').value = gy
+        htmx.trigger(document.getElementById('direct-place-form'), 'submit')
+      }
     })
 
-    // Close modal and re-init canvas after successful node placement
     document.getElementById('place-node-form').addEventListener('htmx:afterRequest', (e) => {
       if (e.detail.successful) { placeModal.hide(); initCanvas() }
+    })
+
+    document.getElementById('direct-place-form').addEventListener('htmx:afterRequest', (e) => {
+      if (e.detail.successful) initCanvas()
     })
   })
 </script>
