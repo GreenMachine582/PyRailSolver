@@ -42,10 +42,49 @@ class TestRenderMap:
         svg = render_map(map_data, build_graph(map_data))
         assert svg.count("<line") == 1
 
-    def test_forward_edge_drawn_once(self) -> None:
+    def test_forward_edge_is_polyline(self) -> None:
         map_data = _make_map(edges=[EdgeRow(from_id=1, to_id=2, direction=Direction.forward)])
         svg = render_map(map_data, build_graph(map_data))
-        assert svg.count("<line") == 1
+        assert svg.count("<polyline") == 1
+        assert "<line" not in svg.split('<g class="edges">')[1].split("</g>")[0]
+
+    def test_bidirectional_edge_is_line(self) -> None:
+        map_data = _make_map()
+        svg = render_map(map_data, build_graph(map_data))
+        assert "<line" in svg
+        assert "<polyline" not in svg
+
+    def test_directed_edge_has_arrow_marker(self) -> None:
+        map_data = _make_map(edges=[EdgeRow(from_id=1, to_id=2, direction=Direction.forward)])
+        svg = render_map(map_data, build_graph(map_data))
+        assert 'marker-mid="url(#arrow)"' in svg
+        assert 'id="arrow"' in svg
+
+    def test_bidirectional_edge_no_arrow_defs(self) -> None:
+        map_data = _make_map()
+        svg = render_map(map_data, build_graph(map_data))
+        assert 'id="arrow"' not in svg
+
+    def test_edge_title_has_cost(self) -> None:
+        map_data = _make_map(
+            edges=[EdgeRow(from_id=1, to_id=2, cost=50, direction=Direction.bidirectional)]
+        )
+        svg = render_map(map_data, build_graph(map_data))
+        assert "Cost: 50" in svg
+
+    def test_edge_title_has_distance(self) -> None:
+        map_data = _make_map(
+            edges=[EdgeRow(from_id=1, to_id=2, distance=3.5, direction=Direction.bidirectional)]
+        )
+        svg = render_map(map_data, build_graph(map_data))
+        assert "Dist: 3.5" in svg
+
+    def test_edge_title_has_speed(self) -> None:
+        map_data = _make_map(
+            edges=[EdgeRow(from_id=1, to_id=2, speed_limit=80, direction=Direction.bidirectional)]
+        )
+        svg = render_map(map_data, build_graph(map_data))
+        assert "Speed: 80" in svg
 
     def test_no_edges(self) -> None:
         map_data = _make_map(edges=[])

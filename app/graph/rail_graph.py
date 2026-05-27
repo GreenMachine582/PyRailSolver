@@ -46,6 +46,9 @@ class RailGraph:
     def has_path(self, from_id: int, to_id: int) -> bool:
         return nx.has_path(self._graph, from_id, to_id)
 
+    def has_reverse_edge(self, from_id: int, to_id: int) -> bool:
+        return bool(self._graph.has_edge(to_id, from_id))
+
 
 def build_graph(map_data: MapData) -> RailGraph:
     """Build a directed RailGraph from a parsed MapData object."""

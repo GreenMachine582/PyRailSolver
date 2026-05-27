@@ -16,6 +16,15 @@ _NODE_COLORS: dict[NodeType, str] = {
     NodeType.endpoint: "#dc3545",
 }
 
+_ARROW_DEFS = (
+    "<defs>"
+    '<marker id="arrow" markerWidth="10" markerHeight="10"'
+    ' refX="5" refY="5" orient="auto" markerUnits="userSpaceOnUse">'
+    '<path d="M0,0 L10,5 L0,10 z" fill="#495057"/>'
+    "</marker>"
+    "</defs>"
+)
+
 
 def _px(coord: int) -> int:
     return _PAD + coord * _SCALE
@@ -37,6 +46,12 @@ def render_map(map_data: MapData, graph: RailGraph) -> str:
             parts.append(f'<circle cx="{_px(gx)}" cy="{_px(gy)}" r="1.5" fill="#adb5bd"/>')
     parts.append("</g>")
 
+    has_directed = any(
+        not graph.has_reverse_edge(e.from_id, e.to_id) for e in graph.edges
+    )
+    if has_directed:
+        parts.append(_ARROW_DEFS)
+
     seen: set[tuple[int, int]] = set()
     parts.append('<g class="edges">')
     for edge in graph.edges:
@@ -46,11 +61,25 @@ def render_map(map_data: MapData, graph: RailGraph) -> str:
         seen.add(key)
         n1 = graph.node(edge.from_id)
         n2 = graph.node(edge.to_id)
-        parts.append(
-            f'<line x1="{_px(n1.x)}" y1="{_px(n1.y)}"'
-            f' x2="{_px(n2.x)}" y2="{_px(n2.y)}"'
-            f' stroke="#6c757d" stroke-width="3" stroke-linecap="round"/>'
+        x1, y1 = _px(n1.x), _px(n1.y)
+        x2, y2 = _px(n2.x), _px(n2.y)
+        edge_title = html.escape(
+            f"Cost: {edge.cost} | Dist: {edge.distance:.1f} | Speed: {edge.speed_limit}"
         )
+        if graph.has_reverse_edge(edge.from_id, edge.to_id):
+            parts.append(
+                f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}"'
+                f' stroke="#6c757d" stroke-width="3" stroke-linecap="round">'
+                f'<title>{edge_title}</title></line>'
+            )
+        else:
+            mx, my = (x1 + x2) // 2, (y1 + y2) // 2
+            pts = f"{x1},{y1} {mx},{my} {x2},{y2}"
+            parts.append(
+                f'<polyline points="{pts}" stroke="#6c757d" stroke-width="3"'
+                f' fill="none" stroke-linecap="round" marker-mid="url(#arrow)">'
+                f'<title>{edge_title}</title></polyline>'
+            )
     parts.append("</g>")
 
     parts.append('<g class="nodes">')

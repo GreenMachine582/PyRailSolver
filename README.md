@@ -43,11 +43,11 @@ PyRailSolver treats each map as a graph optimisation problem: given the terrain 
 
 ### Current
 
-- [ ] CSV map import
-- [ ] Internal graph representation
-- [ ] Map validation
+- [x] CSV map import
+- [x] Internal graph representation
+- [x] Map validation
 - [ ] Pathfinding algorithms
-- [ ] Local web interface
+- [x] Local web interface
 
 ### Planned
 
@@ -344,9 +344,9 @@ mypy app/
 **Goal:** View maps in a browser.
 
 - [x] FastAPI application skeleton
-- [ ] SVG map renderer
-- [ ] Pan and zoom controls
-- [ ] Node and edge rendering with labels
+- [x] SVG map renderer
+- [x] Pan and zoom controls
+- [x] Node and edge rendering with labels
 
 **Deliverable:** Interactive read-only map viewer.
 

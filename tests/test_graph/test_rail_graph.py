@@ -150,6 +150,22 @@ class TestEdgeAccess:
         assert len(rail_graph.edges) == 4
 
 
+class TestReverseEdge:
+    def test_bidirectional_has_reverse(self, rail_graph: RailGraph) -> None:
+        assert rail_graph.has_reverse_edge(1, 3) is True
+
+    def test_forward_only_no_reverse(self, map_data: MapData) -> None:
+        map_data.edges[0] = EdgeRow(
+            from_id=1, to_id=3, cost=100, distance=8.0,
+            capacity=1, direction=Direction.forward, speed_limit=50,
+        )
+        g = build_graph(map_data)
+        assert g.has_reverse_edge(1, 3) is False
+
+    def test_nonexistent_edge_no_reverse(self, rail_graph: RailGraph) -> None:
+        assert rail_graph.has_reverse_edge(1, 2) is False
+
+
 class TestPathfinding:
     def test_has_path_direct(self, rail_graph: RailGraph) -> None:
         assert rail_graph.has_path(1, 3)
