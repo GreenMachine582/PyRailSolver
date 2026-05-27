@@ -1,4 +1,8 @@
+from unittest.mock import patch
+
 from fastapi.testclient import TestClient
+
+from app.parser.csv_parser import MapParseError
 
 
 class TestListMaps:
@@ -63,3 +67,7 @@ class TestGetMap:
 
     def test_not_found(self, client: TestClient) -> None:
         assert client.get("/api/maps/nonexistent").status_code == 404
+
+    def test_parse_error_returns_422(self, client: TestClient) -> None:
+        with patch("app.api.maps.parse_map", side_effect=MapParseError("bad csv")):
+            assert client.get("/api/maps/tutorial_1").status_code == 422

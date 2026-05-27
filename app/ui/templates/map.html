@@ -63,8 +63,7 @@
   </div>
 </div>
 
-<div id="map-canvas"
-     class="map-canvas border rounded bg-light d-flex align-items-center justify-content-center">
-  <p class="text-muted mb-0">SVG renderer — coming next</p>
+<div id="map-canvas" class="map-canvas border rounded bg-light overflow-auto p-2">
+  {{ svg | safe }}
 </div>
 {% endblock %}

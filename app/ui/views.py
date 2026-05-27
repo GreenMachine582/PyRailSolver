@@ -6,6 +6,7 @@ from app.graph.rail_graph import build_graph
 from app.graph.validation import validate_map_data, validate_rail_graph
 from app.parser.csv_parser import MapParseError, parse_map
 from app.parser.models import NodeType
+from app.renderer import render_map
 from app.ui import templates
 
 router = APIRouter()
@@ -42,5 +43,6 @@ async def map_viewer(request: Request, name: str) -> Response:
             "is_valid": data_result.is_valid and graph_result.is_valid,
             "errors": [e.message for e in data_result.errors + graph_result.errors],
             "warnings": [w.message for w in data_result.warnings + graph_result.warnings],
+            "svg": render_map(map_data, graph),
         },
     )

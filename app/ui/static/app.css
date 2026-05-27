@@ -1,3 +1,7 @@
 .map-canvas {
   min-height: 480px;
 }
+
+.map-canvas svg {
+  display: block;
+}
