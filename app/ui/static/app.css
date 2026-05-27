@@ -11,12 +11,9 @@
   cursor: grabbing;
 }
 
-.placing-mode svg {
-  cursor: crosshair;
-}
-
+.placing-mode svg,
 .placing-mode svg:active {
-  cursor: crosshair;
+  cursor: crosshair !important;
 }
 
 .node-dot {

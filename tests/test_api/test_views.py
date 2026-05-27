@@ -18,6 +18,15 @@ class TestIndex:
     def test_contains_nav(self, client: TestClient) -> None:
         assert "PyRailSolver" in client.get("/").text
 
+    def test_nav_has_editor_link(self, client: TestClient) -> None:
+        assert 'href="/editor"' in client.get("/").text
+
+    def test_nav_has_maps_link(self, client: TestClient) -> None:
+        assert 'href="/"' in client.get("/").text
+
+    def test_index_has_new_map_button(self, client: TestClient) -> None:
+        assert "New Map" in client.get("/").text
+
 
 class TestMapViewer:
     def test_returns_200(self, client: TestClient) -> None:

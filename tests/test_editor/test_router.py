@@ -32,8 +32,8 @@ class TestEditorPage:
         for tool in ("pan", "station", "platform", "junction", "depot", "waypoint", "endpoint"):
             assert f'data-tool="{tool}"' in text
 
-    def test_contains_direct_place_form(self, client: TestClient) -> None:
-        assert 'id="direct-place-form"' in client.get("/editor").text
+    def test_contains_tool_hint(self, client: TestClient) -> None:
+        assert 'id="tool-hint"' in client.get("/editor").text
 
     def test_empty_node_list(self, client: TestClient) -> None:
         assert "No nodes placed yet" in client.get("/editor").text
