@@ -31,23 +31,24 @@ class TestGetMap:
 
     def test_nodes_present(self, client: TestClient) -> None:
         data = client.get("/api/maps/tutorial_1").json()
-        assert len(data["nodes"]) == 3
+        assert len(data["nodes"]) == 7
 
     def test_edges_present(self, client: TestClient) -> None:
         data = client.get("/api/maps/tutorial_1").json()
-        assert len(data["edges"]) == 2
+        assert len(data["edges"]) == 7
 
     def test_trains_present(self, client: TestClient) -> None:
         data = client.get("/api/maps/tutorial_1").json()
-        assert len(data["trains"]) == 1
+        assert len(data["trains"]) == 2
 
     def test_stats_node_count(self, client: TestClient) -> None:
         data = client.get("/api/maps/tutorial_1").json()
-        assert data["stats"]["node_count"] == 3
+        assert data["stats"]["node_count"] == 7
 
     def test_stats_edge_count(self, client: TestClient) -> None:
         data = client.get("/api/maps/tutorial_1").json()
-        assert data["stats"]["edge_count"] == 4
+        # 4 bidir CSV edges → 8 directed + 3 forward edges = 11 directed total
+        assert data["stats"]["edge_count"] == 11
 
     def test_stats_station_count(self, client: TestClient) -> None:
         data = client.get("/api/maps/tutorial_1").json()
@@ -55,7 +56,7 @@ class TestGetMap:
 
     def test_stats_train_count(self, client: TestClient) -> None:
         data = client.get("/api/maps/tutorial_1").json()
-        assert data["stats"]["train_count"] == 1
+        assert data["stats"]["train_count"] == 2
 
     def test_is_valid(self, client: TestClient) -> None:
         data = client.get("/api/maps/tutorial_1").json()

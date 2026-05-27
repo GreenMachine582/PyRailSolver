@@ -30,7 +30,7 @@ class TestMapViewer:
         assert "Tutorial 1" in client.get("/maps/tutorial_1").text
 
     def test_shows_node_count(self, client: TestClient) -> None:
-        assert "3" in client.get("/maps/tutorial_1").text
+        assert "7" in client.get("/maps/tutorial_1").text
 
     def test_shows_grid_dimensions(self, client: TestClient) -> None:
         assert "20" in client.get("/maps/tutorial_1").text

@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Map Editor — PyRailSolver{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">{{ map_data.meta.name }}</h1>
+  <span class="badge bg-secondary">{{ map_data.meta.width }}&times;{{ map_data.meta.height }}</span>
+</div>
+
+<div class="row g-3">
+
+  <div class="col-lg-9">
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <div class="btn-group btn-group-sm" role="group" aria-label="Map zoom controls">
+        <button id="btn-zoom-in"    class="btn btn-outline-secondary" title="Zoom in">+</button>
+        <button id="btn-zoom-out"   class="btn btn-outline-secondary" title="Zoom out">&minus;</button>
+        <button id="btn-zoom-reset" class="btn btn-outline-secondary" title="Reset view">&#8857;</button>
+      </div>
+      <small class="text-muted">Click grid to place a node &bull; scroll to zoom &bull; drag to pan</small>
+    </div>
+
+    <div id="map-canvas" class="map-canvas border rounded bg-light overflow-hidden editor-mode">
+      {{ svg | safe }}
+    </div>
+
+    <div class="mt-3 d-flex flex-wrap align-items-center gap-3">
+      <span class="text-muted small fw-semibold">Node types:</span>
+      <span class="d-flex align-items-center gap-1">
+        <svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#0d6efd" stroke="white" stroke-width="1.5"/></svg>
+        <small class="text-muted">Station</small>
+      </span>
+      <span class="d-flex align-items-center gap-1">
+        <svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#6ea8fe" stroke="white" stroke-width="1.5"/></svg>
+        <small class="text-muted">Platform</small>
+      </span>
+      <span class="d-flex align-items-center gap-1">
+        <svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#6c757d" stroke="white" stroke-width="1.5"/></svg>
+        <small class="text-muted">Junction</small>
+      </span>
+      <span class="d-flex align-items-center gap-1">
+        <svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#fd7e14" stroke="white" stroke-width="1.5"/></svg>
+        <small class="text-muted">Depot</small>
+      </span>
+      <span class="d-flex align-items-center gap-1">
+        <svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#198754" stroke="white" stroke-width="1.5"/></svg>
+        <small class="text-muted">Waypoint</small>
+      </span>
+      <span class="d-flex align-items-center gap-1">
+        <svg width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#dc3545" stroke="white" stroke-width="1.5"/></svg>
+        <small class="text-muted">Endpoint</small>
+      </span>
+    </div>
+  </div>
+
+  <div class="col-lg-3">
+    <div class="card">
+      <div class="card-header fw-semibold small">Placed Nodes</div>
+      <ul id="editor-node-list" class="list-group list-group-flush">
+        <li class="list-group-item text-muted small">No nodes placed yet.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- Place Node Modal -->
+<div class="modal fade" id="placeNodeModal" tabindex="-1"
+     aria-labelledby="placeNodeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title" id="placeNodeModalLabel">Place Station</h6>
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+      </div>
+      <div class="modal-body py-3">
+        <form id="place-node-form"
+              hx-post="/editor/nodes"
+              hx-target="#map-canvas"
+              hx-swap="innerHTML">
+          <input type="hidden" name="x" id="node-x" value="0">
+          <input type="hidden" name="y" id="node-y" value="0">
+          <div class="mb-3">
+            <p class="form-label small fw-semibold mb-1">Node type</p>
+            <div class="row g-1">
+              <div class="col-6">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="node_type"
+                         value="station" id="nt-station" checked>
+                  <label class="form-check-label small" for="nt-station">
+                    <svg width="10" height="10" aria-hidden="true" class="me-1">
+                      <circle cx="5" cy="5" r="4" fill="#0d6efd"/>
+                    </svg>Station
+                  </label>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="node_type"
+                         value="platform" id="nt-platform">
+                  <label class="form-check-label small" for="nt-platform">
+                    <svg width="10" height="10" aria-hidden="true" class="me-1">
+                      <circle cx="5" cy="5" r="4" fill="#6ea8fe"/>
+                    </svg>Platform
+                  </label>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="node_type"
+                         value="junction" id="nt-junction">
+                  <label class="form-check-label small" for="nt-junction">
+                    <svg width="10" height="10" aria-hidden="true" class="me-1">
+                      <circle cx="5" cy="5" r="4" fill="#6c757d"/>
+                    </svg>Junction
+                  </label>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="node_type"
+                         value="depot" id="nt-depot">
+                  <label class="form-check-label small" for="nt-depot">
+                    <svg width="10" height="10" aria-hidden="true" class="me-1">
+                      <circle cx="5" cy="5" r="4" fill="#fd7e14"/>
+                    </svg>Depot
+                  </label>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="node_type"
+                         value="waypoint" id="nt-waypoint">
+                  <label class="form-check-label small" for="nt-waypoint">
+                    <svg width="10" height="10" aria-hidden="true" class="me-1">
+                      <circle cx="5" cy="5" r="4" fill="#198754"/>
+                    </svg>Waypoint
+                  </label>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="node_type"
+                         value="endpoint" id="nt-endpoint">
+                  <label class="form-check-label small" for="nt-endpoint">
+                    <svg width="10" height="10" aria-hidden="true" class="me-1">
+                      <circle cx="5" cy="5" r="4" fill="#dc3545"/>
+                    </svg>Endpoint
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="node-name" class="form-label small">
+              Name <span id="name-hint" class="text-muted fw-normal">(required)</span>
+            </label>
+            <input type="text" class="form-control form-control-sm" id="node-name"
+                   name="name" placeholder="e.g. Coal Mine" autocomplete="off">
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm">Place</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    let pzWheelHandler = null
+
+    function initCanvas() {
+      const svg = document.getElementById('map-svg')
+      if (!svg) return
+
+      const pz = Panzoom(svg, { maxScale: 8, minScale: 0.25 })
+      const canvas = document.getElementById('map-canvas')
+      if (pzWheelHandler) canvas.removeEventListener('wheel', pzWheelHandler)
+      pzWheelHandler = pz.zoomWithWheel
+      canvas.addEventListener('wheel', pzWheelHandler, { passive: false })
+
+      document.getElementById('btn-zoom-in').onclick  = pz.zoomIn
+      document.getElementById('btn-zoom-out').onclick = pz.zoomOut
+      document.getElementById('btn-zoom-reset').onclick = pz.reset
+
+      document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
+        new bootstrap.Popover(el, { trigger: 'hover', html: false })
+      })
+    }
+
+    initCanvas()
+
+    // Node type metadata: title, name placeholder, whether name is required
+    const NODE_TYPE_META = {
+      station:  { label: 'Station',  placeholder: 'e.g. Coal Mine',     hint: '(required)' },
+      platform: { label: 'Platform', placeholder: 'e.g. Mine Platform', hint: '(optional)' },
+      junction: { label: 'Junction', placeholder: '',                   hint: '(optional)' },
+      depot:    { label: 'Depot',    placeholder: 'e.g. Yard',          hint: '(optional)' },
+      waypoint: { label: 'Waypoint', placeholder: '',                   hint: '(optional)' },
+      endpoint: { label: 'Endpoint', placeholder: 'e.g. North Siding',  hint: '(optional)' },
+    }
+
+    function syncModalForType() {
+      const radio = document.querySelector('input[name="node_type"]:checked')
+      if (!radio) return
+      const meta = NODE_TYPE_META[radio.value]
+      if (!meta) return
+      document.getElementById('placeNodeModalLabel').textContent = `Place ${meta.label}`
+      document.getElementById('node-name').placeholder = meta.placeholder
+      document.getElementById('name-hint').textContent = meta.hint
+    }
+
+    document.querySelectorAll('input[name="node_type"]').forEach(r => {
+      r.addEventListener('change', syncModalForType)
+    })
+
+    // Distinguish click from drag
+    let mouseDownAt = { x: 0, y: 0 }
+    const canvas = document.getElementById('map-canvas')
+    canvas.addEventListener('mousedown', (e) => { mouseDownAt = { x: e.clientX, y: e.clientY } })
+
+    // Place node on grid click
+    const placeModal = new bootstrap.Modal(document.getElementById('placeNodeModal'))
+
+    canvas.addEventListener('click', (e) => {
+      if (Math.hypot(e.clientX - mouseDownAt.x, e.clientY - mouseDownAt.y) > 4) return
+      if (e.target.closest('g.nodes') || e.target.closest('g.edges')) return
+
+      const svg = document.getElementById('map-svg')
+      if (!svg) return
+
+      const PAD   = parseInt(svg.dataset.pad,    10)
+      const SCALE = parseInt(svg.dataset.scale,  10)
+      const W     = parseInt(svg.dataset.gridW,  10)
+      const H     = parseInt(svg.dataset.gridH,  10)
+
+      const pt = svg.createSVGPoint()
+      pt.x = e.clientX; pt.y = e.clientY
+      const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse())
+      const gx = Math.round((svgPt.x - PAD) / SCALE)
+      const gy = Math.round((svgPt.y - PAD) / SCALE)
+      if (gx < 0 || gx >= W || gy < 0 || gy >= H) return
+
+      document.getElementById('node-x').value = gx
+      document.getElementById('node-y').value = gy
+      document.getElementById('node-name').value = ''
+      syncModalForType()
+      placeModal.show()
+      setTimeout(() => document.getElementById('node-name').focus(), 300)
+    })
+
+    // Close modal and re-init canvas after successful node placement
+    document.getElementById('place-node-form').addEventListener('htmx:afterRequest', (e) => {
+      if (e.detail.successful) { placeModal.hide(); initCanvas() }
+    })
+  })
+</script>
+{% endblock %}

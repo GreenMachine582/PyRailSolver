@@ -1,0 +1,11 @@
+{{ svg | safe }}
+<ul id="editor-node-list" class="list-group list-group-flush" hx-swap-oob="true">
+  {% for node in map_data.nodes %}
+  <li class="list-group-item d-flex justify-content-between align-items-center py-1 small">
+    <span>{{ node.name or "(unnamed)" }}</span>
+    <span class="text-muted">({{ node.x }}, {{ node.y }})</span>
+  </li>
+  {% else %}
+  <li class="list-group-item text-muted small">No nodes placed yet.</li>
+  {% endfor %}
+</ul>

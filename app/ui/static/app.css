@@ -10,3 +10,11 @@
 .map-canvas svg:active {
   cursor: grabbing;
 }
+
+.editor-mode svg {
+  cursor: crosshair;
+}
+
+.editor-mode svg:active {
+  cursor: crosshair;
+}

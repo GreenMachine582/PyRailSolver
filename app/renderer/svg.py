@@ -37,7 +37,9 @@ def render_map(map_data: MapData, graph: RailGraph) -> str:
     parts: list[str] = []
     parts.append(
         f'<svg xmlns="http://www.w3.org/2000/svg" id="map-svg"'
-        f' width="{w}" height="{h}" viewBox="0 0 {w} {h}">'
+        f' width="{w}" height="{h}" viewBox="0 0 {w} {h}"'
+        f' data-scale="{_SCALE}" data-pad="{_PAD}"'
+        f' data-grid-w="{map_data.meta.width}" data-grid-h="{map_data.meta.height}">'
     )
 
     parts.append('<g class="grid" opacity="0.3">')

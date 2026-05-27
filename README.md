@@ -356,8 +356,8 @@ mypy app/
 
 **Goal:** Build maps locally without the game.
 
-- [ ] Place and label stations
-- [ ] Place junctions
+- [x] Place and label stations
+- [x] Place junctions
 - [ ] Draw track segments
 - [ ] Delete objects
 - [ ] Save/load map files

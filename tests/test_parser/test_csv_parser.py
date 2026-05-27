@@ -153,9 +153,9 @@ class TestExampleFile:
         path = Path("examples/tutorial_1.csv")
         data = parse_map(path)
         assert data.meta.name == "Tutorial 1"
-        assert len(data.nodes) == 3
-        assert len(data.edges) == 2
-        assert len(data.trains) == 1
+        assert len(data.nodes) == 7
+        assert len(data.edges) == 7
+        assert len(data.trains) == 2
 
 
 class TestParseErrors:
