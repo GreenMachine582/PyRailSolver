@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}{{ map_data.meta.name }} — PyRailSolver{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">{{ map_data.meta.name }}</h1>
+  <a href="/" class="btn btn-outline-secondary btn-sm">&larr; All Maps</a>
+</div>
+
+{% if not is_valid %}
+<div class="alert alert-danger">
+  <strong>Validation errors:</strong>
+  <ul class="mb-0 mt-1">
+    {% for err in errors %}<li>{{ err }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+{% if warnings %}
+<div class="alert alert-warning">
+  <strong>Warnings:</strong>
+  <ul class="mb-0 mt-1">
+    {% for w in warnings %}<li>{{ w }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card text-center h-100">
+      <div class="card-body">
+        <div class="fs-2 fw-bold text-primary">{{ stats.node_count }}</div>
+        <div class="text-muted small">Nodes</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center h-100">
+      <div class="card-body">
+        <div class="fs-2 fw-bold text-primary">{{ stats.edge_count }}</div>
+        <div class="text-muted small">Track Segments</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center h-100">
+      <div class="card-body">
+        <div class="fs-2 fw-bold text-primary">{{ stats.train_count }}</div>
+        <div class="text-muted small">Trains</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center h-100">
+      <div class="card-body">
+        <div class="fs-2 fw-bold text-primary">
+          {{ map_data.meta.width }}&times;{{ map_data.meta.height }}
+        </div>
+        <div class="text-muted small">Grid</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="map-canvas"
+     class="map-canvas border rounded bg-light d-flex align-items-center justify-content-center">
+  <p class="text-muted mb-0">SVG renderer — coming next</p>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Maps — PyRailSolver{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Available Maps</h1>
+</div>
+
+{% if maps %}
+<div class="list-group">
+  {% for name in maps %}
+  <a href="/maps/{{ name }}"
+     class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+    <span class="font-monospace">{{ name }}</span>
+    <span class="badge bg-secondary">View</span>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-secondary">
+  No maps found. Add <code>.csv</code> files to the <code>examples/</code> or
+  <code>maps/</code> directory.
+</div>
+{% endif %}
+{% endblock %}

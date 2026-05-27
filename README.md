@@ -343,7 +343,7 @@ mypy app/
 
 **Goal:** View maps in a browser.
 
-- [ ] FastAPI application skeleton
+- [x] FastAPI application skeleton
 - [ ] SVG map renderer
 - [ ] Pan and zoom controls
 - [ ] Node and edge rendering with labels
