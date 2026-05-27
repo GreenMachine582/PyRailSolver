@@ -4,4 +4,9 @@
 
 .map-canvas svg {
   display: block;
+  cursor: grab;
+}
+
+.map-canvas svg:active {
+  cursor: grabbing;
 }

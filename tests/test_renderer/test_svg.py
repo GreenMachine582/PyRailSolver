@@ -128,3 +128,32 @@ class TestRenderMap:
         map_data = _make_map()
         svg = render_map(map_data, build_graph(map_data))
         assert 'class="grid"' in svg
+
+    def test_svg_has_id(self) -> None:
+        map_data = _make_map()
+        svg = render_map(map_data, build_graph(map_data))
+        assert 'id="map-svg"' in svg
+
+    def test_node_has_popover_toggle(self) -> None:
+        map_data = _make_map()
+        svg = render_map(map_data, build_graph(map_data))
+        assert 'data-bs-toggle="popover"' in svg
+
+    def test_node_popover_title_is_name(self) -> None:
+        map_data = _make_map()
+        svg = render_map(map_data, build_graph(map_data))
+        assert 'data-bs-title="A"' in svg
+
+    def test_node_popover_content_has_type_and_pos(self) -> None:
+        map_data = _make_map()
+        svg = render_map(map_data, build_graph(map_data))
+        assert "Type: station" in svg
+        assert "(2, 3)" in svg
+
+    def test_node_popover_title_escaped(self) -> None:
+        map_data = _make_map(nodes=[
+            NodeRow(id=1, type=NodeType.station, x=1, y=1, name='A"B'),
+        ], edges=[])
+        svg = render_map(map_data, build_graph(map_data))
+        assert 'A&quot;B' in svg
+        assert 'A"B' not in svg

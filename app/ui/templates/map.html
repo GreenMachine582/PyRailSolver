@@ -63,7 +63,35 @@
   </div>
 </div>
 
-<div id="map-canvas" class="map-canvas border rounded bg-light overflow-auto p-2">
+<div class="d-flex align-items-center gap-2 mb-2">
+  <div class="btn-group btn-group-sm" role="group" aria-label="Map zoom controls">
+    <button id="btn-zoom-in"  class="btn btn-outline-secondary" title="Zoom in">+</button>
+    <button id="btn-zoom-out" class="btn btn-outline-secondary" title="Zoom out">&minus;</button>
+    <button id="btn-zoom-reset" class="btn btn-outline-secondary" title="Reset view">&#8857;</button>
+  </div>
+  <small class="text-muted">Scroll to zoom &bull; drag to pan &bull; hover nodes for details</small>
+</div>
+
+<div id="map-canvas" class="map-canvas border rounded bg-light overflow-hidden">
   {{ svg | safe }}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const svg = document.getElementById('map-svg')
+    if (!svg) return
+
+    const pz = Panzoom(svg, { maxScale: 8, minScale: 0.25 })
+    svg.parentElement.addEventListener('wheel', pz.zoomWithWheel, { passive: false })
+    document.getElementById('btn-zoom-in').addEventListener('click', pz.zoomIn)
+    document.getElementById('btn-zoom-out').addEventListener('click', pz.zoomOut)
+    document.getElementById('btn-zoom-reset').addEventListener('click', pz.reset)
+
+    document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
+      new bootstrap.Popover(el, { trigger: 'hover', html: false })
+    })
+  })
+</script>
 {% endblock %}

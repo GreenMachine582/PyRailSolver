@@ -289,7 +289,7 @@ pip install -e ".[dev]"
 ### Running the development server
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8080
 ```
 
 Open `http://localhost:8000` in your browser.

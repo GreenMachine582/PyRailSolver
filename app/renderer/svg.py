@@ -27,7 +27,7 @@ def render_map(map_data: MapData, graph: RailGraph) -> str:
 
     parts: list[str] = []
     parts.append(
-        f'<svg xmlns="http://www.w3.org/2000/svg"'
+        f'<svg xmlns="http://www.w3.org/2000/svg" id="map-svg"'
         f' width="{w}" height="{h}" viewBox="0 0 {w} {h}">'
     )
 
@@ -59,9 +59,15 @@ def render_map(map_data: MapData, graph: RailGraph) -> str:
         cy = _px(node.y)
         color = _NODE_COLORS[node.type]
         label = html.escape(node.name or node.type.value)
+        content = html.escape(
+            f"Type: {node.type.value} | ({node.x}, {node.y}) | Cap: {node.capacity}"
+        )
         parts.append(
             f'<circle cx="{cx}" cy="{cy}" r="{_R}"'
-            f' fill="{color}" stroke="white" stroke-width="2"/>'
+            f' fill="{color}" stroke="white" stroke-width="2"'
+            f' tabindex="0" data-bs-toggle="popover" data-bs-trigger="hover"'
+            f' data-bs-placement="top" data-bs-title="{label}"'
+            f' data-bs-content="{content}"/>'
         )
         parts.append(
             f'<text x="{cx}" y="{cy - _R - 4}" text-anchor="middle"'
