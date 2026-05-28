@@ -11,7 +11,7 @@ const HINTS = {
   endpoint: 'Click canvas to place an Endpoint',
 }
 
-export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onSave, saveStatus, onThemeToggle, theme }) {
+export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload, onSave, saving, onThemeToggle, theme }) {
   const fileRef = useRef(null)
 
   return (
@@ -40,15 +40,16 @@ export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onSave, sa
         className="toolbar-btn"
         title="Save map to project"
         onClick={onSave}
-        disabled={!!saveStatus}
+        disabled={saving}
       >
-        {saveStatus || 'Save'}
+        {saving ? 'Saving…' : 'Save'}
       </button>
       <a
         href="/api/editor/export"
         className="toolbar-btn"
         download="map.json"
         title="Download map as JSON"
+        onClick={onDownload}
       >
         Download
       </a>

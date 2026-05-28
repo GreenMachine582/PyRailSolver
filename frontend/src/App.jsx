@@ -12,6 +12,7 @@ import { RailNode }         from './nodeTypes/RailNode'
 import { Toolbar }          from './components/Toolbar'
 import { PropertiesPanel }  from './components/PropertiesPanel'
 import { EdgeDialog }       from './components/EdgeDialog'
+import { Notifications }    from './components/Notifications'
 import { api }              from './api'
 import { GRID_SIZE, NODE_COLORS } from './constants'
 
@@ -73,7 +74,17 @@ function EditorInner() {
   const [theme, setTheme] = useState(
     () => document.documentElement.getAttribute('data-bs-theme') || 'light'
   )
-  const [saveStatus, setSaveStatus] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [notifications, setNotifications] = useState([])
+
+  function notify(message, type = 'success') {
+    const id = Date.now()
+    setNotifications(prev => [...prev, { id, message, type }])
+  }
+
+  function dismissNotification(id) {
+    setNotifications(prev => prev.filter(n => n.id !== id))
+  }
 
   const { screenToFlowPosition } = useReactFlow()
   const deletingNodes = useRef(false)
@@ -218,15 +229,19 @@ function EditorInner() {
   }, [pendingConn])
 
   const handleSaveMap = useCallback(async () => {
-    setSaveStatus('Saving…')
+    setSaving(true)
     try {
       const { filename } = await api.saveMap()
-      setSaveStatus(`Saved: ${filename}`)
-      setTimeout(() => setSaveStatus(''), 3000)
+      notify(`Saved: ${filename}`)
     } catch (err) {
-      setSaveStatus('')
-      alert(`Save failed: ${err.message}`)
+      notify(`Save failed: ${err.message}`, 'error')
+    } finally {
+      setSaving(false)
     }
+  }, [])
+
+  const handleDownload = useCallback(() => {
+    notify('Downloaded map.json')
   }, [])
 
   const handleLoadFile = useCallback(async (file) => {
@@ -234,7 +249,10 @@ function EditorInner() {
       const state = await api.loadFile(file)
       loadState(state)
       setSelected(null)
-    } catch (err) { alert(`Load failed: ${err.message}`) }
+      notify(`Loaded: ${file.name}`)
+    } catch (err) {
+      notify(`Load failed: ${err.message}`, 'error')
+    }
   }, [])
 
   // ── React Flow props ────────────────────────────────────
@@ -248,7 +266,8 @@ function EditorInner() {
         onToolChange={setActiveTool}
         meta={meta}
         onSave={handleSaveMap}
-        saveStatus={saveStatus}
+        saving={saving}
+        onDownload={handleDownload}
         onLoadFile={handleLoadFile}
         onThemeToggle={toggleTheme}
         theme={theme}
@@ -307,6 +326,8 @@ function EditorInner() {
           onCancel={() => setPendingConn(null)}
         />
       )}
+
+      <Notifications items={notifications} onDismiss={dismissNotification} />
     </div>
   )
 }

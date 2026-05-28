@@ -1,2 +1,40 @@
-.idea
-node_modules
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# ── Virtual environments ───────────────────────────────────
+.venv/
+venv/
+env/
+Environments/
+
+# ── Environment variables ──────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Frontend ───────────────────────────────────────────────
+node_modules/
+frontend/dist/
+
+# ── Maps (user-generated data) ────────────────────────────
+maps/*.json
+
+# ── IDE ───────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── OS ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
