@@ -259,6 +259,44 @@ class TestAddEdge:
         assert "Speed: 80" in r.text
 
 
+class TestUpdateNode:
+    def test_returns_200(self, client: TestClient) -> None:
+        client.post("/editor/nodes", data={"x": "1", "y": "1", "name": "Old"})
+        r = client.put("/editor/nodes/1", data={"name": "New", "node_type": "station"})
+        assert r.status_code == 200
+
+    def test_name_updated_in_canvas(self, client: TestClient) -> None:
+        client.post("/editor/nodes", data={"x": "1", "y": "1", "name": "Old"})
+        r = client.put("/editor/nodes/1", data={"name": "Renamed", "node_type": "station"})
+        assert "Renamed" in r.text
+        assert "Old" not in r.text
+
+    def test_type_change_reflected_in_svg(self, client: TestClient) -> None:
+        client.post("/editor/nodes", data={"x": "1", "y": "1", "name": "A", "node_type": "station"})
+        r = client.put("/editor/nodes/1", data={"name": "A", "node_type": "depot"})
+        assert "#fd7e14" in r.text  # depot colour
+
+    def test_unknown_node_returns_404(self, client: TestClient) -> None:
+        r = client.put("/editor/nodes/99", data={"name": "X", "node_type": "station"})
+        assert r.status_code == 404
+
+    def test_invalid_type_returns_422(self, client: TestClient) -> None:
+        client.post("/editor/nodes", data={"x": "1", "y": "1", "name": "A"})
+        r = client.put("/editor/nodes/1", data={"name": "A", "node_type": "rocket"})
+        assert r.status_code == 422
+
+    def test_name_stripped_on_update(self, client: TestClient) -> None:
+        client.post("/editor/nodes", data={"x": "1", "y": "1", "name": "A"})
+        r = client.put("/editor/nodes/1", data={"name": "  B  ", "node_type": "station"})
+        assert ">B<" in r.text
+
+    def test_node_list_updated_after_rename(self, client: TestClient) -> None:
+        client.post("/editor/nodes", data={"x": "1", "y": "1", "name": "A"})
+        r = client.put("/editor/nodes/1", data={"name": "Renamed", "node_type": "station"})
+        assert "editor-node-list" in r.text
+        assert "Renamed" in r.text
+
+
 class TestDeleteNode:
     def test_returns_200(self, client: TestClient) -> None:
         client.post("/editor/nodes", data={"x": "1", "y": "1", "name": "A"})

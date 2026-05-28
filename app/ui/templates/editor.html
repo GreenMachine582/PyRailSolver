@@ -268,16 +268,119 @@
     </div>
   </div>
 </div>
+<!-- Edit Node Modal -->
+<div class="modal fade" id="editNodeModal" tabindex="-1"
+     aria-labelledby="editNodeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title" id="editNodeModalLabel">Edit Node</h6>
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+      </div>
+      <div class="modal-body py-3">
+        <form id="edit-node-form">
+          <input type="hidden" id="edit-node-id">
+          <div class="mb-3">
+            <p class="form-label small fw-semibold mb-1">Node type</p>
+            <div class="row g-1">
+              <div class="col-6">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="node_type"
+                         value="station" id="en-station">
+                  <label class="form-check-label small" for="en-station">
+                    <svg width="10" height="10" aria-hidden="true" class="me-1">
+                      <circle cx="5" cy="5" r="4" fill="#0d6efd"/>
+                    </svg>Station
+                  </label>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="node_type"
+                         value="platform" id="en-platform">
+                  <label class="form-check-label small" for="en-platform">
+                    <svg width="10" height="10" aria-hidden="true" class="me-1">
+                      <circle cx="5" cy="5" r="4" fill="#6ea8fe"/>
+                    </svg>Platform
+                  </label>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="node_type"
+                         value="junction" id="en-junction">
+                  <label class="form-check-label small" for="en-junction">
+                    <svg width="10" height="10" aria-hidden="true" class="me-1">
+                      <circle cx="5" cy="5" r="4" fill="#6c757d"/>
+                    </svg>Junction
+                  </label>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="node_type"
+                         value="depot" id="en-depot">
+                  <label class="form-check-label small" for="en-depot">
+                    <svg width="10" height="10" aria-hidden="true" class="me-1">
+                      <circle cx="5" cy="5" r="4" fill="#fd7e14"/>
+                    </svg>Depot
+                  </label>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="node_type"
+                         value="waypoint" id="en-waypoint">
+                  <label class="form-check-label small" for="en-waypoint">
+                    <svg width="10" height="10" aria-hidden="true" class="me-1">
+                      <circle cx="5" cy="5" r="4" fill="#198754"/>
+                    </svg>Waypoint
+                  </label>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="node_type"
+                         value="endpoint" id="en-endpoint">
+                  <label class="form-check-label small" for="en-endpoint">
+                    <svg width="10" height="10" aria-hidden="true" class="me-1">
+                      <circle cx="5" cy="5" r="4" fill="#dc3545"/>
+                    </svg>Endpoint
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="edit-node-name" class="form-label small">
+              Name <span id="edit-name-hint" class="text-muted fw-normal">(optional)</span>
+            </label>
+            <input type="text" class="form-control form-control-sm" id="edit-node-name"
+                   name="name" autocomplete="off">
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    let pzWheelHandler = null
-    let activeTool = 'pan'
-    let pointerDownAt = null
-    let trackFrom = null       // { id, name } of the first node selected in track mode
-    let trackFromEl = null     // the <circle> element to un-highlight on cancel
+    let pzWheelHandler  = null
+    let activeTool      = 'pan'
+    let pointerDownAt   = null   // non-pan mode click start
+    let panPointerDown  = null   // pan mode click start (for popover toggle)
+    let trackFrom       = null   // { id, name } first node in track mode
+    let trackFromEl     = null   // circle element highlighted as track-from
+    let selectedNodeId  = null   // sidebar-highlighted node id (string)
 
     const canvas = document.getElementById('map-canvas')
 
@@ -293,7 +396,7 @@
     }
 
     const TOOL_HINTS = {
-      pan:      'Pan mode — select a tool above to place nodes',
+      pan:      'Pan mode — click a node to open its menu, or select a tool to place nodes',
       station:  'Click grid to place a station',
       platform: 'Click grid to place a platform',
       junction: 'Click grid to place a junction (no name required)',
@@ -303,6 +406,52 @@
       track:    'Click a node to start a track segment',
     }
 
+    // ─── helpers ────────────────────────────────────────────────────────────
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    }
+
+    function hideAllPopovers(except) {
+      document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
+        if (el !== except) bootstrap.Popover.getInstance(el)?.hide()
+      })
+    }
+
+    function buildNodePopoverContent(el) {
+      const type = escHtml(el.dataset.nodeType || '')
+      const x    = escHtml(el.dataset.nodeX    || '')
+      const y    = escHtml(el.dataset.nodeY    || '')
+      return `<p class="small text-muted mb-2">${type}&nbsp;(${x},&nbsp;${y})</p>` +
+        `<div class="d-flex gap-1">` +
+        `<button class="btn btn-outline-primary btn-sm py-0 px-2 popover-edit-btn">Edit</button>` +
+        `<button class="btn btn-outline-danger btn-sm py-0 px-2 popover-delete-btn">Delete</button>` +
+        `</div>`
+    }
+
+    // ─── node highlight (sidebar selection) ─────────────────────────────────
+
+    function applyHighlight() {
+      const sid = String(selectedNodeId)
+      // highlight matching SVG circle with a glow
+      document.querySelectorAll('circle[data-node-id]').forEach(el => {
+        el.style.filter = (selectedNodeId !== null && el.dataset.nodeId === sid)
+          ? 'drop-shadow(0 0 6px #ffc107) drop-shadow(0 0 3px #ffc107)'
+          : ''
+      })
+      // highlight matching sidebar row
+      document.querySelectorAll('#editor-node-list [data-node-id]').forEach(el => {
+        el.classList.toggle('list-group-item-warning', selectedNodeId !== null && el.dataset.nodeId === sid)
+      })
+    }
+
+    function highlightNode(nodeId) {
+      selectedNodeId = nodeId
+      applyHighlight()
+    }
+
+    // ─── canvas init (called after every SVG re-render) ─────────────────────
+
     function initCanvas() {
       const svg = document.getElementById('map-svg')
       if (!svg) return
@@ -310,17 +459,27 @@
       if (pzWheelHandler) canvas.removeEventListener('wheel', pzWheelHandler)
       pzWheelHandler = pz.zoomWithWheel
       canvas.addEventListener('wheel', pzWheelHandler, { passive: false })
-      document.getElementById('btn-zoom-in').onclick  = pz.zoomIn
-      document.getElementById('btn-zoom-out').onclick = pz.zoomOut
+      document.getElementById('btn-zoom-in').onclick    = pz.zoomIn
+      document.getElementById('btn-zoom-out').onclick   = pz.zoomOut
       document.getElementById('btn-zoom-reset').onclick = pz.reset
+      // Popovers use manual trigger — Panzoom calls preventDefault() on pointerdown
+      // which kills click events, so Bootstrap's click trigger never fires.
+      // We toggle them ourselves in the pan-mode pointerup handler.
       document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => {
-        new bootstrap.Popover(el, { trigger: 'hover', html: false })
+        new bootstrap.Popover(el, {
+          trigger: 'manual',
+          html: true,
+          placement: 'top',
+          container: 'body',
+          content: function () { return buildNodePopoverContent(this) },
+        })
       })
+      applyHighlight()
     }
 
     initCanvas()
 
-    // --- track selection helpers ---
+    // ─── track selection helpers ─────────────────────────────────────────────
 
     function clearTrackFrom() {
       if (trackFromEl) {
@@ -342,17 +501,18 @@
         `From: ${trackFrom.name} — click another node to connect, or click away to cancel`
     }
 
-    // --- modal setup ---
+    // ─── modals ──────────────────────────────────────────────────────────────
 
-    const placeModal = new bootstrap.Modal(document.getElementById('placeNodeModal'))
+    const placeModal     = new bootstrap.Modal(document.getElementById('placeNodeModal'))
     const placeEdgeModal = new bootstrap.Modal(document.getElementById('placeEdgeModal'))
+    const editModal      = new bootstrap.Modal(document.getElementById('editNodeModal'))
 
     document.getElementById('placeEdgeModal').addEventListener('hidden.bs.modal', clearTrackFrom)
 
-    // --- node-type modal helpers ---
+    // ─── place modal: node-type radio sync ───────────────────────────────────
 
     function syncModalForType() {
-      const radio = document.querySelector('input[name="node_type"]:checked')
+      const radio = document.querySelector('#place-node-form input[name="node_type"]:checked')
       if (!radio) return
       const meta = NODE_TYPE_META[radio.value]
       if (!meta) return
@@ -361,7 +521,7 @@
       document.getElementById('name-hint').textContent = meta.hint
     }
 
-    document.querySelectorAll('input[name="node_type"]').forEach(r => {
+    document.querySelectorAll('#place-node-form input[name="node_type"]').forEach(r => {
       r.addEventListener('change', () => {
         activeTool = r.value
         updateToolbarButtons(r.value)
@@ -369,7 +529,74 @@
       })
     })
 
-    // --- toolbar ---
+    // ─── edit modal ──────────────────────────────────────────────────────────
+
+    function syncEditModalForType() {
+      const radio = document.querySelector('#edit-node-form input[name="node_type"]:checked')
+      if (!radio) return
+      const meta = NODE_TYPE_META[radio.value]
+      if (!meta) return
+      document.getElementById('editNodeModalLabel').textContent = `Edit ${meta.label}`
+      document.getElementById('edit-name-hint').textContent = meta.hint
+      document.getElementById('edit-node-name').placeholder = meta.placeholder
+    }
+
+    document.querySelectorAll('#edit-node-form input[name="node_type"]').forEach(r => {
+      r.addEventListener('change', syncEditModalForType)
+    })
+
+    function openEditModal(nodeId, nodeName, nodeType) {
+      document.getElementById('edit-node-id').value = nodeId
+      document.getElementById('edit-node-name').value = nodeName
+      const radio = document.getElementById(`en-${nodeType}`)
+      if (radio) radio.checked = true
+      syncEditModalForType()
+      editModal.show()
+      setTimeout(() => document.getElementById('edit-node-name').focus(), 300)
+    }
+
+    document.getElementById('edit-node-form').addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const nodeId   = document.getElementById('edit-node-id').value
+      const name     = document.getElementById('edit-node-name').value.trim()
+      const nodeType = document.querySelector('#edit-node-form input[name="node_type"]:checked')?.value || 'station'
+      await htmx.ajax('PUT', `/editor/nodes/${nodeId}`, {
+        target: '#map-canvas',
+        swap: 'innerHTML',
+        values: { name, node_type: nodeType },
+      })
+      editModal.hide()
+    })
+
+    // ─── popover button wiring (fires each time a node popover is shown) ─────
+
+    document.addEventListener('shown.bs.popover', (ev) => {
+      const trigger = ev.target
+      if (!trigger.dataset.nodeId) return
+      const tipId = trigger.getAttribute('aria-describedby')
+      const tip   = tipId ? document.getElementById(tipId) : null
+      if (!tip) return
+      const nodeId = parseInt(trigger.dataset.nodeId)
+      const pInst  = bootstrap.Popover.getInstance(trigger)
+
+      tip.querySelector('.popover-edit-btn')?.addEventListener('click', () => {
+        pInst?.hide()
+        openEditModal(nodeId, trigger.dataset.nodeName || '', trigger.dataset.nodeType || 'station')
+      }, { once: true })
+
+      tip.querySelector('.popover-delete-btn')?.addEventListener('click', () => {
+        pInst?.hide()
+        const label = trigger.dataset.nodeName || trigger.dataset.nodeType || `Node ${nodeId}`
+        if (confirm(`Delete "${label}" and its connected track?`)) {
+          htmx.ajax('DELETE', `/editor/nodes/${nodeId}`, {
+            target: '#map-canvas',
+            swap: 'innerHTML',
+          })
+        }
+      }, { once: true })
+    })
+
+    // ─── toolbar ─────────────────────────────────────────────────────────────
 
     function updateToolbarButtons(tool) {
       document.querySelectorAll('#tool-group [data-tool]').forEach(btn => {
@@ -382,6 +609,7 @@
 
     function setActiveTool(tool) {
       clearTrackFrom()
+      hideAllPopovers()
       activeTool = tool
       updateToolbarButtons(tool)
       const radio = document.getElementById(`nt-${tool}`)
@@ -393,22 +621,45 @@
       btn.addEventListener('click', () => setActiveTool(btn.dataset.tool))
     })
 
-    // --- pointer capture handlers (run before Panzoom in capture phase) ---
+    // ─── pointer capture handlers ────────────────────────────────────────────
 
     canvas.addEventListener('pointerdown', (e) => {
-      if (activeTool === 'pan') return
+      if (activeTool === 'pan') {
+        panPointerDown = { x: e.clientX, y: e.clientY }
+        return  // let Panzoom handle it
+      }
+      // In placement modes, dismiss any open popover and claim the event
+      hideAllPopovers()
       pointerDownAt = { x: e.clientX, y: e.clientY }
       e.stopPropagation()
     }, true)
 
     canvas.addEventListener('pointerup', (e) => {
-      if (activeTool === 'pan' || !pointerDownAt) return
+      // ── pan mode: toggle node popovers on tap ──
+      if (activeTool === 'pan') {
+        if (!panPointerDown) return
+        const panStart = panPointerDown
+        panPointerDown = null
+        if (Math.hypot(e.clientX - panStart.x, e.clientY - panStart.y) > 4) return
+
+        const nodeEl = e.target.closest('[data-node-id]')
+        hideAllPopovers(nodeEl)
+        if (nodeEl) {
+          const pInst   = bootstrap.Popover.getInstance(nodeEl)
+          const isShown = !!nodeEl.getAttribute('aria-describedby')
+          if (isShown) pInst?.hide()
+          else         pInst?.show()
+        }
+        return
+      }
+
+      if (!pointerDownAt) return
       const start = pointerDownAt
       pointerDownAt = null
       e.stopPropagation()
       if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 4) return
 
-      // --- track tool: click-to-click node wiring ---
+      // ── track tool ──
       if (activeTool === 'track') {
         if (e.target.closest('g.edges')) return
         const nodeEl = e.target.closest('[data-node-id]')
@@ -435,7 +686,7 @@
         return
       }
 
-      // --- node placement tools: click on empty grid ---
+      // ── node placement ──
       if (e.target.closest('g.nodes') || e.target.closest('g.edges')) return
 
       const svg = document.getElementById('map-svg')
@@ -466,7 +717,12 @@
       }
     }, true)
 
-    canvas.addEventListener('pointercancel', () => { pointerDownAt = null }, true)
+    canvas.addEventListener('pointercancel', () => {
+      pointerDownAt = null
+      panPointerDown = null
+    }, true)
+
+    // ─── HTMX lifecycle ──────────────────────────────────────────────────────
 
     document.getElementById('place-node-form').addEventListener('htmx:afterRequest', (e) => {
       if (e.detail.successful) { placeModal.hide(); initCanvas() }
@@ -478,8 +734,21 @@
 
     canvas.addEventListener('htmx:afterSettle', initCanvas)
 
+    // Re-apply sidebar highlight after OOB node-list swap
+    document.addEventListener('htmx:afterSettle', applyHighlight)
+
     document.getElementById('load-file-input').addEventListener('change', function () {
       if (this.files.length) this.closest('form').requestSubmit()
+    })
+
+    // ─── sidebar node selection ───────────────────────────────────────────────
+
+    document.getElementById('editor-node-list').addEventListener('click', (e) => {
+      if (e.target.closest('button')) return      // let delete buttons bubble normally
+      const li = e.target.closest('[data-node-id]')
+      if (!li) return
+      const id = li.dataset.nodeId
+      highlightNode(selectedNodeId === id ? null : id)   // click again to deselect
     })
   })
 </script>

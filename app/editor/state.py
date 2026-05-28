@@ -54,6 +54,15 @@ class EditorState:
         self._edges.append(edge)
         return edge
 
+    def update_node(self, node_id: int, name: str, node_type: NodeType) -> bool:
+        node = next((n for n in self._nodes if n.id == node_id), None)
+        if node is None:
+            return False
+        self._nodes[self._nodes.index(node)] = node.model_copy(
+            update={"name": name, "type": node_type}
+        )
+        return True
+
     def delete_node(self, node_id: int) -> bool:
         node = next((n for n in self._nodes if n.id == node_id), None)
         if node is None:

@@ -197,6 +197,43 @@ class TestAddEdge:
         assert s.map_data.edges == []
 
 
+class TestUpdateNode:
+    def test_update_node_returns_true(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 1, 1, "Old")
+        assert s.update_node(1, "New", NodeType.station) is True
+
+    def test_update_node_changes_name(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 1, 1, "Old")
+        s.update_node(1, "New Name", NodeType.station)
+        assert s.map_data.nodes[0].name == "New Name"
+
+    def test_update_node_changes_type(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 1, 1, "A")
+        s.update_node(1, "A", NodeType.depot)
+        assert s.map_data.nodes[0].type == NodeType.depot
+
+    def test_update_node_unknown_id_returns_false(self) -> None:
+        s = EditorState()
+        assert s.update_node(99, "X", NodeType.station) is False
+
+    def test_update_node_preserves_position(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 3, 7, "A")
+        s.update_node(1, "B", NodeType.junction)
+        node = s.map_data.nodes[0]
+        assert node.x == 3
+        assert node.y == 7
+
+    def test_update_node_preserves_id(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 3, 7, "A")
+        s.update_node(1, "B", NodeType.junction)
+        assert s.map_data.nodes[0].id == 1
+
+
 class TestDeleteNode:
     def test_delete_node_returns_true(self) -> None:
         s = EditorState()

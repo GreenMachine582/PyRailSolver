@@ -52,6 +52,24 @@ async def add_node(
     return _canvas_response(request)
 
 
+@router.put("/nodes/{node_id}", response_class=HTMLResponse)
+async def update_node(
+    request: Request,
+    node_id: int,
+    node_type: str = Form("station"),
+    name: str = Form(""),
+) -> Response:
+    try:
+        nt = NodeType(node_type)
+    except ValueError:
+        raise HTTPException(
+            status_code=422, detail=f"Unknown node type: {node_type!r}"
+        ) from None
+    if not editor.update_node(node_id, name.strip(), nt):
+        raise HTTPException(status_code=404, detail=f"Node {node_id} not found")
+    return _canvas_response(request)
+
+
 @router.delete("/nodes/{node_id}", response_class=HTMLResponse)
 async def delete_node(request: Request, node_id: int) -> Response:
     if not editor.delete_node(node_id):
