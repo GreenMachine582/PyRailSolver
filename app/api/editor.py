@@ -1,7 +1,10 @@
+import re
+
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel
 
+from app.core.config import settings
 from app.editor.state import editor
 from app.parser.models import Direction, MapData, NodeType
 
@@ -122,6 +125,15 @@ async def delete_edge(edge_index: int) -> MapData:
     if not editor.delete_edge(edge_index):
         raise HTTPException(status_code=404, detail=f"Edge {edge_index} not found")
     return editor.map_data
+
+
+@router.post("/save")
+async def save_map() -> dict[str, str]:
+    slug = re.sub(r"[^\w\-]", "_", editor.map_data.meta.name).strip("_") or "untitled"
+    settings.maps_dir.mkdir(parents=True, exist_ok=True)
+    path = settings.maps_dir / f"{slug}.json"
+    path.write_text(editor.map_data.model_dump_json(indent=2), encoding="utf-8")
+    return {"filename": path.name}
 
 
 @router.get("/export")

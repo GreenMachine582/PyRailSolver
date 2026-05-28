@@ -73,6 +73,7 @@ function EditorInner() {
   const [theme, setTheme] = useState(
     () => document.documentElement.getAttribute('data-bs-theme') || 'light'
   )
+  const [saveStatus, setSaveStatus] = useState('')
 
   const { screenToFlowPosition } = useReactFlow()
   const deletingNodes = useRef(false)
@@ -216,6 +217,14 @@ function EditorInner() {
     setPendingConn(null)
   }, [pendingConn])
 
+  const handleSaveMap = useCallback(async () => {
+    try {
+      const { filename } = await api.saveMap()
+      setSaveStatus(`Saved: ${filename}`)
+      setTimeout(() => setSaveStatus(''), 3000)
+    } catch (err) { alert(`Save failed: ${err.message}`) }
+  }, [])
+
   const handleLoadFile = useCallback(async (file) => {
     try {
       const state = await api.loadFile(file)
@@ -234,6 +243,8 @@ function EditorInner() {
         activeTool={activeTool}
         onToolChange={setActiveTool}
         meta={meta}
+        onSave={handleSaveMap}
+        saveStatus={saveStatus}
         onLoadFile={handleLoadFile}
         onThemeToggle={toggleTheme}
         theme={theme}

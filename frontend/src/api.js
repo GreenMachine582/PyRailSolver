@@ -46,6 +46,7 @@ export const api = {
   addEdge:    (data)         => _post(`${BASE}/edges`, data),
   updateEdge: (idx, data)    => _put(`${BASE}/edges/${idx}`, data),
   deleteEdge: (idx)          => _del(`${BASE}/edges/${idx}`),
+  saveMap:    ()             => _post(`${BASE}/save`, {}),
   loadFile:   (file)         => {
     const fd = new FormData()
     fd.append('file', file)
