@@ -54,5 +54,25 @@ class EditorState:
         self._edges.append(edge)
         return edge
 
+    def delete_node(self, node_id: int) -> bool:
+        node = next((n for n in self._nodes if n.id == node_id), None)
+        if node is None:
+            return False
+        self._nodes.remove(node)
+        self._edges = [e for e in self._edges if e.from_id != node_id and e.to_id != node_id]
+        return True
+
+    def delete_edge(self, edge_index: int) -> bool:
+        if edge_index < 0 or edge_index >= len(self._edges):
+            return False
+        del self._edges[edge_index]
+        return True
+
+    def load(self, data: MapData) -> None:
+        self._meta = data.meta
+        self._nodes = list(data.nodes)
+        self._edges = list(data.edges)
+        self._next_id = max((n.id for n in self._nodes), default=0) + 1
+
 
 editor = EditorState()

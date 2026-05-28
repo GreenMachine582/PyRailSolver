@@ -54,6 +54,16 @@
           </svg>Track
         </button>
       </div>
+      <div class="vr"></div>
+      <a href="/editor/export" class="btn btn-sm btn-outline-success" download="map.json"
+         title="Save map as JSON">Save</a>
+      <form id="load-form" hx-post="/editor/load" enctype="multipart/form-data"
+            hx-swap="none" class="d-inline m-0">
+        <input type="file" name="file" accept=".json" id="load-file-input" class="d-none">
+        <button type="button" class="btn btn-sm btn-outline-warning"
+                title="Load map from JSON"
+                onclick="document.getElementById('load-file-input').click()">Load</button>
+      </form>
       <small id="tool-hint" class="text-muted">Pan mode &mdash; select a tool above to place nodes</small>
     </div>
 
@@ -464,6 +474,12 @@
 
     document.getElementById('place-edge-form').addEventListener('htmx:afterRequest', (e) => {
       if (e.detail.successful) { placeEdgeModal.hide(); clearTrackFrom(); initCanvas() }
+    })
+
+    canvas.addEventListener('htmx:afterSettle', initCanvas)
+
+    document.getElementById('load-file-input').addEventListener('change', function () {
+      if (this.files.length) this.closest('form').requestSubmit()
     })
   })
 </script>

@@ -1,13 +1,23 @@
-from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, Response
 
 from app.editor.state import editor
 from app.graph.rail_graph import build_graph
-from app.parser.models import Direction, NodeType
+from app.parser.models import Direction, MapData, NodeType
 from app.renderer import render_map
 from app.ui import templates
 
 router = APIRouter(prefix="/editor", tags=["editor"])
+
+
+def _canvas_response(request: Request) -> Response:
+    map_data = editor.map_data
+    graph = build_graph(map_data)
+    return templates.TemplateResponse(
+        request,
+        "partials/editor_canvas.html",
+        {"map_data": map_data, "svg": render_map(map_data, graph)},
+    )
 
 
 @router.get("", response_class=HTMLResponse)
@@ -39,13 +49,14 @@ async def add_node(
             status_code=422, detail=f"Unknown node type: {node_type!r}"
         ) from None
     editor.add_node(nt, x, y, name.strip())
-    map_data = editor.map_data
-    graph = build_graph(map_data)
-    return templates.TemplateResponse(
-        request,
-        "partials/editor_canvas.html",
-        {"map_data": map_data, "svg": render_map(map_data, graph)},
-    )
+    return _canvas_response(request)
+
+
+@router.delete("/nodes/{node_id}", response_class=HTMLResponse)
+async def delete_node(request: Request, node_id: int) -> Response:
+    if not editor.delete_node(node_id):
+        raise HTTPException(status_code=404, detail=f"Node {node_id} not found")
+    return _canvas_response(request)
 
 
 @router.post("/edges", response_class=HTMLResponse)
@@ -73,10 +84,32 @@ async def add_edge(
             status_code=422, detail=f"Invalid direction: {direction!r}"
         ) from None
     editor.add_edge(from_id, to_id, dir_val, cost, distance, capacity, speed_limit)
-    map_data = editor.map_data
-    graph = build_graph(map_data)
-    return templates.TemplateResponse(
-        request,
-        "partials/editor_canvas.html",
-        {"map_data": map_data, "svg": render_map(map_data, graph)},
+    return _canvas_response(request)
+
+
+@router.delete("/edges/{edge_index}", response_class=HTMLResponse)
+async def delete_edge(request: Request, edge_index: int) -> Response:
+    if not editor.delete_edge(edge_index):
+        raise HTTPException(status_code=404, detail=f"Edge index {edge_index} not found")
+    return _canvas_response(request)
+
+
+@router.get("/export")
+async def export_map() -> Response:
+    json_bytes = editor.map_data.model_dump_json(indent=2).encode()
+    return Response(
+        content=json_bytes,
+        media_type="application/json",
+        headers={"Content-Disposition": 'attachment; filename="map.json"'},
     )
+
+
+@router.post("/load")
+async def load_map(file: UploadFile = File(...)) -> Response:
+    try:
+        content = await file.read()
+        data = MapData.model_validate_json(content)
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=f"Invalid map file: {exc}") from exc
+    editor.load(data)
+    return Response(status_code=200, headers={"HX-Redirect": "/editor"})

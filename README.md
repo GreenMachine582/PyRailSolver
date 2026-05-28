@@ -51,14 +51,14 @@ PyRailSolver treats each map as a graph optimisation problem: given the terrain 
 
 ### Planned
 
-- [ ] Interactive map editor
+- [x] Interactive map editor
 - [ ] Multiple train simulation
 - [ ] Track cost optimisation
 - [ ] Junction conflict detection
 - [ ] Throughput analysis
 - [ ] Automatic solution generation
 - [ ] Solution visualisation
-- [ ] Save/load project files
+- [x] Save/load project files
 - [ ] Scenario benchmarking
 - [ ] Export solutions
 
@@ -359,8 +359,8 @@ mypy app/
 - [x] Place and label stations
 - [x] Place junctions
 - [x] Draw track segments
-- [ ] Delete objects
-- [ ] Save/load map files
+- [x] Delete objects
+- [x] Save/load map files
 
 **Deliverable:** Fully functional local map editor.
 

@@ -1,5 +1,5 @@
 from app.editor.state import EditorState
-from app.parser.models import Direction, NodeType
+from app.parser.models import Direction, MapData, MapMeta, NodeRow, NodeType
 
 
 class TestEditorState:
@@ -195,3 +195,130 @@ class TestAddEdge:
         s.add_edge(1, 2)
         s.reset()
         assert s.map_data.edges == []
+
+
+class TestDeleteNode:
+    def test_delete_node_returns_true(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0, "A")
+        assert s.delete_node(1) is True
+
+    def test_delete_node_removes_from_map(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0, "A")
+        s.delete_node(1)
+        assert s.map_data.nodes == []
+
+    def test_delete_node_unknown_id_returns_false(self) -> None:
+        s = EditorState()
+        assert s.delete_node(99) is False
+
+    def test_delete_node_cascades_edges(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0, "A")
+        s.add_node(NodeType.station, 5, 5, "B")
+        s.add_edge(1, 2)
+        s.delete_node(1)
+        assert s.map_data.edges == []
+
+    def test_delete_node_cascades_only_connected_edges(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0, "A")
+        s.add_node(NodeType.station, 5, 5, "B")
+        s.add_node(NodeType.station, 10, 10, "C")
+        s.add_edge(1, 2)
+        s.add_edge(2, 3)
+        s.delete_node(1)
+        assert len(s.map_data.edges) == 1
+        assert s.map_data.edges[0].from_id == 2
+
+    def test_delete_node_preserves_other_nodes(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0, "A")
+        s.add_node(NodeType.station, 5, 5, "B")
+        s.delete_node(1)
+        assert len(s.map_data.nodes) == 1
+        assert s.map_data.nodes[0].name == "B"
+
+
+class TestDeleteEdge:
+    def test_delete_edge_returns_true(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0)
+        s.add_node(NodeType.station, 5, 5)
+        s.add_edge(1, 2)
+        assert s.delete_edge(0) is True
+
+    def test_delete_edge_removes_from_map(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0)
+        s.add_node(NodeType.station, 5, 5)
+        s.add_edge(1, 2)
+        s.delete_edge(0)
+        assert s.map_data.edges == []
+
+    def test_delete_edge_out_of_bounds_returns_false(self) -> None:
+        s = EditorState()
+        assert s.delete_edge(0) is False
+
+    def test_delete_edge_negative_index_returns_false(self) -> None:
+        s = EditorState()
+        assert s.delete_edge(-1) is False
+
+    def test_delete_edge_by_index_correct_edge_removed(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0, "A")
+        s.add_node(NodeType.station, 5, 5, "B")
+        s.add_node(NodeType.station, 10, 10, "C")
+        s.add_edge(1, 2)
+        s.add_edge(2, 3)
+        s.delete_edge(0)
+        assert len(s.map_data.edges) == 1
+        assert s.map_data.edges[0].from_id == 2
+
+
+class TestLoadMap:
+    def _make_map(self) -> MapData:
+        return MapData(
+            meta=MapMeta(name="Test", width=10, height=8),
+            nodes=[NodeRow(id=5, type=NodeType.station, x=1, y=1, name="X")],
+            edges=[],
+            trains=[],
+        )
+
+    def test_load_sets_meta(self) -> None:
+        s = EditorState()
+        s.load(self._make_map())
+        assert s.map_data.meta.name == "Test"
+        assert s.map_data.meta.width == 10
+
+    def test_load_sets_nodes(self) -> None:
+        s = EditorState()
+        s.load(self._make_map())
+        assert len(s.map_data.nodes) == 1
+        assert s.map_data.nodes[0].name == "X"
+
+    def test_load_sets_next_id_after_max(self) -> None:
+        s = EditorState()
+        s.load(self._make_map())
+        new_node = s.add_node(NodeType.junction, 3, 3)
+        assert new_node.id == 6
+
+    def test_load_empty_nodes_next_id_is_one(self) -> None:
+        s = EditorState()
+        data = MapData(
+            meta=MapMeta(name="Empty", width=5, height=5),
+            nodes=[],
+            edges=[],
+            trains=[],
+        )
+        s.load(data)
+        new_node = s.add_node(NodeType.junction, 1, 1)
+        assert new_node.id == 1
+
+    def test_load_replaces_existing_state(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0, "Old")
+        s.load(self._make_map())
+        assert len(s.map_data.nodes) == 1
+        assert s.map_data.nodes[0].name == "X"
