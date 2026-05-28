@@ -269,6 +269,7 @@ PyRailSolver/
 
 - Python 3.13 or later
 - `pip` or `uv` (recommended)
+- Node.js 18 or later (for the frontend editor)
 
 ### Installation
 
@@ -292,7 +293,24 @@ pip install -e ".[dev]"
 uvicorn app.main:app --reload --port 8080
 ```
 
-Open `http://localhost:8000` in your browser.
+Open `http://localhost:8080` in your browser.
+
+### Running the frontend editor
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173` in your browser.
+
+To build the frontend for production:
+
+```bash
+cd frontend
+npm run build
+```
 
 ### Running tests
 
