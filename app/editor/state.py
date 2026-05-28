@@ -85,6 +85,13 @@ class EditorState:
         )
         return True
 
+    def move_node(self, node_id: int, x: int, y: int) -> bool:
+        node = next((n for n in self._nodes if n.id == node_id), None)
+        if node is None:
+            return False
+        self._nodes[self._nodes.index(node)] = node.model_copy(update={"x": x, "y": y})
+        return True
+
     def delete_node(self, node_id: int) -> bool:
         node = next((n for n in self._nodes if n.id == node_id), None)
         if node is None:

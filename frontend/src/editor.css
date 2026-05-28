@@ -1,0 +1,223 @@
+/* ─── Root layout ──────────────────────────────────────── */
+html, body { margin: 0; overflow: hidden; height: 100%; }
+#root { height: 100%; }
+
+.editor-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.editor-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-canvas {
+  flex: 1;
+  position: relative;
+}
+
+/* ─── Toolbar ──────────────────────────────────────────── */
+.editor-toolbar {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  background: #1b4332;
+  border-bottom: 1px solid #2d6a4f;
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.toolbar-brand {
+  color: #74c69d;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+.toolbar-brand:hover { color: #fff; }
+
+.toolbar-map-name {
+  color: #d8f3dc;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.toolbar-sep {
+  width: 1px;
+  height: 24px;
+  background: #2d6a4f;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.toolbar-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid #2d6a4f;
+  background: transparent;
+  color: #d8f3dc;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: background 0.1s, color 0.1s;
+}
+.toolbar-btn:hover  { background: #2d6a4f; color: #fff; }
+.toolbar-btn.active { background: #40916c; border-color: #52b788; color: #fff; }
+
+.node-dot-sm {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.toolbar-hint {
+  font-size: 11px;
+  color: #74c69d;
+  margin-left: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─── Rail node ────────────────────────────────────────── */
+.rail-node-wrapper {
+  text-align: center;
+  padding: 6px 10px 4px;
+  min-width: 36px;
+}
+
+.rail-node-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin: 0 auto;
+  transition: box-shadow 0.1s;
+}
+
+.rail-node-label {
+  font-size: 11px;
+  margin-top: 3px;
+  white-space: nowrap;
+  color: inherit;
+  pointer-events: none;
+}
+
+/* ─── Properties panel ─────────────────────────────────── */
+.props-panel {
+  width: 260px;
+  flex-shrink: 0;
+  border-left: 1px solid #95d5b2;
+  background: var(--bs-body-bg, #fff);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.props-header {
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #d8f3dc;
+  border-bottom: 1px solid #95d5b2;
+  flex-shrink: 0;
+}
+
+[data-bs-theme="dark"] .props-header {
+  background: #1a3d28;
+  border-bottom-color: #2d6a4f;
+}
+
+.props-body {
+  padding: 14px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.props-field {
+  margin-bottom: 10px;
+}
+
+.props-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 3px;
+}
+
+.props-val {
+  font-size: 13px;
+}
+
+.props-dot-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.props-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* ─── Edge / confirm dialog ────────────────────────────── */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.dialog-box {
+  background: var(--bs-body-bg, #fff);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, .25);
+  min-width: 300px;
+  max-width: 420px;
+  width: 100%;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+.dialog-body {
+  padding: 16px;
+}
+
+/* ─── Dark mode tweaks for React Flow ─────────────────── */
+[data-bs-theme="dark"] .react-flow__background {
+  background: #0d1f16;
+}
+
+[data-bs-theme="dark"] .props-panel {
+  border-left-color: #2d6a4f;
+}

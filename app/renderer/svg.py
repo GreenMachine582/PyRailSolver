@@ -90,20 +90,25 @@ def render_map(map_data: MapData, graph: RailGraph) -> str:
         cy = _px(node.y)
         color = _NODE_COLORS[node.type]
         label = html.escape(node.name or node.type.value)
+        # Wrap circle + label in a <g> so clicking the text also hits the node target.
+        # All interaction data lives on the group; the circle/text are purely visual.
         parts.append(
-            f'<circle cx="{cx}" cy="{cy}" r="{_R}"'
-            f' fill="{color}" stroke="white" stroke-width="2"'
-            f' data-node-id="{node.id}"'
+            f'<g data-node-id="{node.id}"'
             f' data-node-name="{html.escape(node.name)}"'
             f' data-node-type="{node.type.value}"'
             f' data-node-x="{node.x}" data-node-y="{node.y}"'
             f' tabindex="0" data-bs-toggle="popover"'
-            f' data-bs-placement="top" data-bs-title="{label}"/>'
+            f' data-bs-placement="top" data-bs-title="{label}">'
+        )
+        parts.append(
+            f'<circle cx="{cx}" cy="{cy}" r="{_R}"'
+            f' fill="{color}" stroke="white" stroke-width="2"/>'
         )
         parts.append(
             f'<text x="{cx}" y="{cy - _R - 4}" text-anchor="middle"'
-            f' font-size="11" font-family="sans-serif" fill="#212529">{label}</text>'
+            f' font-size="11" font-family="sans-serif">{label}</text>'
         )
+        parts.append('</g>')
     parts.append("</g>")
 
     parts.append("</svg>")

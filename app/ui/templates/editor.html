@@ -576,8 +576,8 @@
 
     function applyHighlight() {
       const sid = String(selectedNodeId)
-      // highlight matching SVG circle with a glow
-      document.querySelectorAll('circle[data-node-id]').forEach(el => {
+      // highlight matching SVG node group with a glow
+      document.querySelectorAll('.nodes [data-node-id]').forEach(el => {
         el.style.filter = (selectedNodeId !== null && el.dataset.nodeId === sid)
           ? 'drop-shadow(0 0 6px #ffc107) drop-shadow(0 0 3px #ffc107)'
           : ''
@@ -626,8 +626,8 @@
 
     function clearTrackFrom() {
       if (trackFromEl) {
-        trackFromEl.style.stroke = ''
-        trackFromEl.style.strokeWidth = ''
+        const c = trackFromEl.querySelector('circle')
+        if (c) { c.style.stroke = ''; c.style.strokeWidth = '' }
         trackFromEl = null
       }
       trackFrom = null
@@ -636,8 +636,8 @@
 
     function selectTrackFrom(el) {
       clearTrackFrom()
-      el.style.stroke = '#ffc107'
-      el.style.strokeWidth = '4'
+      const c = el.querySelector('circle')
+      if (c) { c.style.stroke = '#ffc107'; c.style.strokeWidth = '4' }
       trackFromEl = el
       trackFrom = { id: parseInt(el.dataset.nodeId), name: el.dataset.bsTitle || `Node ${el.dataset.nodeId}` }
       document.getElementById('tool-hint').textContent =
@@ -847,7 +847,7 @@
         panPointerDown = null
         if (Math.hypot(e.clientX - panStart.x, e.clientY - panStart.y) > 4) return
 
-        const nodeEl = e.target.closest('[data-node-id]')
+        const nodeEl = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-node-id]')
         hideAllPopovers(nodeEl)
         if (nodeEl) {
           const pInst   = bootstrap.Popover.getInstance(nodeEl)

@@ -186,8 +186,9 @@ class TestRenderMap:
     def test_node_popover_content_has_type_and_pos(self) -> None:
         map_data = _make_map()
         svg = render_map(map_data, build_graph(map_data))
-        assert "Type: station" in svg
-        assert "(2, 3)" in svg
+        assert 'data-node-type="station"' in svg
+        assert 'data-node-x="2"' in svg
+        assert 'data-node-y="3"' in svg
 
     def test_node_popover_title_escaped(self) -> None:
         map_data = _make_map(nodes=[

@@ -367,6 +367,43 @@ class TestUpdateEdge:
         assert edge.to_id == 2
 
 
+class TestMoveNode:
+    def test_move_node_returns_true(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 1, 1, "A")
+        assert s.move_node(1, 3, 4) is True
+
+    def test_move_node_updates_x(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 1, 1, "A")
+        s.move_node(1, 5, 6)
+        assert s.map_data.nodes[0].x == 5
+
+    def test_move_node_updates_y(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 1, 1, "A")
+        s.move_node(1, 5, 6)
+        assert s.map_data.nodes[0].y == 6
+
+    def test_move_node_unknown_id_returns_false(self) -> None:
+        s = EditorState()
+        assert s.move_node(99, 0, 0) is False
+
+    def test_move_node_preserves_name_and_type(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.depot, 0, 0, "Yard")
+        s.move_node(1, 5, 5)
+        node = s.map_data.nodes[0]
+        assert node.name == "Yard"
+        assert node.type == NodeType.depot
+
+    def test_move_node_preserves_id(self) -> None:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0, "A")
+        s.move_node(1, 2, 3)
+        assert s.map_data.nodes[0].id == 1
+
+
 class TestLoadMap:
     def _make_map(self) -> MapData:
         return MapData(
