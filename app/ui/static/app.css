@@ -26,44 +26,91 @@
   margin-right: 2px;
 }
 
-/* ─── green railway theme ────────────────────────────────── */
+/* ─── light palette (default) ────────────────────────────── */
 :root {
-  --rs-950:   #1b4332;
-  --rs-700:   #2d6a4f;
-  --rs-500:   #40916c;
-  --rs-300:   #74c69d;
-  --rs-100:   #d8f3dc;
-  --rs-50:    #f0fdf4;
+  --rs-950:    #1b4332;
+  --rs-700:    #2d6a4f;
+  --rs-500:    #40916c;
+  --rs-300:    #74c69d;
+  --rs-100:    #d8f3dc;
+  --rs-50:     #f0fdf4;
   --rs-border: #95d5b2;
+  --rs-hover:  #e2f5e9;
 }
 
-/* Navbar */
+/* ─── SVG canvas text always follows body text colour ───── */
+.map-canvas svg text { fill: currentColor; }
+
+/* ─── dark palette ───────────────────────────────────────── */
+[data-bs-theme="dark"] {
+  --rs-950:    #071510;
+  --rs-700:    #40916c;
+  --rs-500:    #52b788;
+  --rs-300:    #95d5b2;
+  --rs-100:    #1a3d28;
+  --rs-50:     #0d1f16;
+  --rs-border: #2d6a4f;
+  --rs-hover:  #1f4d39;
+
+  --bs-body-bg:      #0d1f16;
+  --bs-body-bg-rgb:  13, 31, 22;
+  --bs-border-color: #2d6a4f;
+  --bs-light-rgb:    13, 31, 22;
+  --bs-modal-bg:     #152b1e;
+}
+
+[data-bs-theme="dark"] .card {
+  --bs-card-bg:     #152b1e;
+  --bs-card-cap-bg: #1a3d28;
+}
+
+[data-bs-theme="dark"] .list-group {
+  --bs-list-group-bg:                #152b1e;
+  --bs-list-group-border-color:      #2d6a4f;
+  --bs-list-group-action-hover-bg:   #1f4d39;
+  --bs-list-group-action-hover-color: var(--rs-300);
+}
+
+/* ─── SVG dark-mode colour adjustments ──────────────────── */
+[data-bs-theme="dark"] .map-canvas svg .edges line,
+[data-bs-theme="dark"] .map-canvas svg .edges polyline {
+  stroke: var(--rs-300);
+}
+
+[data-bs-theme="dark"] .map-canvas svg marker path {
+  fill: var(--rs-300);
+}
+
+[data-bs-theme="dark"] .map-canvas svg .grid circle {
+  fill: var(--rs-border);
+}
+
+/* ─── navbar ─────────────────────────────────────────────── */
 .navbar.bg-dark { background-color: var(--rs-950) !important; }
 
-/* Cards */
+/* ─── cards ──────────────────────────────────────────────── */
 .card { border-color: var(--rs-border); }
 .card-header {
   background-color: var(--rs-100);
   border-bottom-color: var(--rs-border);
-  color: var(--rs-950);
 }
 
-/* Modals */
+/* ─── modals ─────────────────────────────────────────────── */
 .modal-header {
   background-color: var(--rs-100);
   border-bottom-color: var(--rs-border);
 }
 
-/* List items */
-.list-group { border-color: var(--rs-border); }
+/* ─── list items ─────────────────────────────────────────── */
+.list-group,
 .list-group-item { border-color: var(--rs-border); }
 .list-group-item-action:hover,
-.list-group-item-action:focus { background-color: #e2f5e9; }
+.list-group-item-action:focus { background-color: var(--rs-hover); }
 
-/* Toolbar dividers */
+/* ─── toolbar dividers ───────────────────────────────────── */
 .vr { background-color: var(--rs-border); opacity: 1; }
 
-/* Buttons — secondary (active tool highlight, small action buttons) */
+/* ─── buttons ────────────────────────────────────────────── */
 .btn-secondary {
   --bs-btn-bg:                  var(--rs-700);
   --bs-btn-border-color:        var(--rs-700);
@@ -83,7 +130,6 @@
   --bs-btn-active-border-color: var(--rs-950);
 }
 
-/* Buttons — primary (Place / Draw / Save modals) */
 .btn-primary {
   --bs-btn-bg:                  var(--rs-700);
   --bs-btn-border-color:        var(--rs-700);
@@ -93,10 +139,10 @@
   --bs-btn-active-border-color: var(--rs-950);
 }
 
-/* Badge (grid size) */
+/* ─── badge ──────────────────────────────────────────────── */
 .badge.bg-secondary { background-color: var(--rs-700) !important; }
 
-/* Form focus rings */
+/* ─── form focus ─────────────────────────────────────────── */
 .form-control:focus,
 .form-check-input:focus {
   border-color: var(--rs-300);
