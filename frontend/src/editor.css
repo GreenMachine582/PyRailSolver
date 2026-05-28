@@ -77,8 +77,10 @@ html, body { margin: 0; overflow: hidden; height: 100%; }
   flex-shrink: 0;
   transition: background 0.1s, color 0.1s;
 }
-.toolbar-btn:hover  { background: #2d6a4f; color: #fff; }
-.toolbar-btn.active { background: #40916c; border-color: #52b788; color: #fff; }
+.toolbar-btn:hover         { background: #2d6a4f; color: #fff; }
+.toolbar-btn.active        { background: #40916c; border-color: #52b788; color: #fff; }
+.toolbar-btn:disabled      { opacity: 0.5; cursor: not-allowed; background: #2d6a4f; color: #74c69d; }
+.toolbar-btn:disabled:hover { background: #2d6a4f; color: #74c69d; }
 
 .node-dot-sm {
   display: inline-block;

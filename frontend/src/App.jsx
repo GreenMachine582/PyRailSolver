@@ -218,11 +218,15 @@ function EditorInner() {
   }, [pendingConn])
 
   const handleSaveMap = useCallback(async () => {
+    setSaveStatus('Saving…')
     try {
       const { filename } = await api.saveMap()
       setSaveStatus(`Saved: ${filename}`)
       setTimeout(() => setSaveStatus(''), 3000)
-    } catch (err) { alert(`Save failed: ${err.message}`) }
+    } catch (err) {
+      setSaveStatus('')
+      alert(`Save failed: ${err.message}`)
+    }
   }, [])
 
   const handleLoadFile = useCallback(async (file) => {

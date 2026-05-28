@@ -40,6 +40,7 @@ export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onSave, sa
         className="toolbar-btn"
         title="Save map to project"
         onClick={onSave}
+        disabled={!!saveStatus}
       >
         {saveStatus || 'Save'}
       </button>
