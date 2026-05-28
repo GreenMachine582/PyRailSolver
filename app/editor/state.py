@@ -63,6 +63,28 @@ class EditorState:
         )
         return True
 
+    def update_edge(
+        self,
+        edge_index: int,
+        direction: Direction,
+        cost: int,
+        distance: float,
+        capacity: int,
+        speed_limit: int,
+    ) -> bool:
+        if edge_index < 0 or edge_index >= len(self._edges):
+            return False
+        self._edges[edge_index] = self._edges[edge_index].model_copy(
+            update={
+                "direction": direction,
+                "cost": cost,
+                "distance": distance,
+                "capacity": capacity,
+                "speed_limit": speed_limit,
+            }
+        )
+        return True
+
     def delete_node(self, node_id: int) -> bool:
         node = next((n for n in self._nodes if n.id == node_id), None)
         if node is None:

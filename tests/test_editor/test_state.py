@@ -314,6 +314,59 @@ class TestDeleteEdge:
         assert s.map_data.edges[0].from_id == 2
 
 
+class TestUpdateEdge:
+    def _setup(self) -> EditorState:
+        s = EditorState()
+        s.add_node(NodeType.station, 0, 0, "A")
+        s.add_node(NodeType.station, 5, 5, "B")
+        s.add_edge(1, 2, cost=10, distance=2.0, capacity=2, speed_limit=80)
+        return s
+
+    def test_update_edge_returns_true(self) -> None:
+        s = self._setup()
+        assert s.update_edge(0, Direction.bidirectional, 20, 3.0, 3, 60) is True
+
+    def test_update_edge_out_of_bounds_returns_false(self) -> None:
+        s = self._setup()
+        assert s.update_edge(5, Direction.bidirectional, 0, 1.0, 1, 100) is False
+
+    def test_update_edge_negative_index_returns_false(self) -> None:
+        s = self._setup()
+        assert s.update_edge(-1, Direction.bidirectional, 0, 1.0, 1, 100) is False
+
+    def test_update_edge_changes_cost(self) -> None:
+        s = self._setup()
+        s.update_edge(0, Direction.bidirectional, 99, 2.0, 2, 80)
+        assert s.map_data.edges[0].cost == 99
+
+    def test_update_edge_changes_distance(self) -> None:
+        s = self._setup()
+        s.update_edge(0, Direction.bidirectional, 10, 4.5, 2, 80)
+        assert s.map_data.edges[0].distance == 4.5
+
+    def test_update_edge_changes_capacity(self) -> None:
+        s = self._setup()
+        s.update_edge(0, Direction.bidirectional, 10, 2.0, 5, 80)
+        assert s.map_data.edges[0].capacity == 5
+
+    def test_update_edge_changes_speed_limit(self) -> None:
+        s = self._setup()
+        s.update_edge(0, Direction.bidirectional, 10, 2.0, 2, 120)
+        assert s.map_data.edges[0].speed_limit == 120
+
+    def test_update_edge_changes_direction(self) -> None:
+        s = self._setup()
+        s.update_edge(0, Direction.forward, 10, 2.0, 2, 80)
+        assert s.map_data.edges[0].direction == Direction.forward
+
+    def test_update_edge_preserves_from_to(self) -> None:
+        s = self._setup()
+        s.update_edge(0, Direction.bidirectional, 0, 1.0, 1, 100)
+        edge = s.map_data.edges[0]
+        assert edge.from_id == 1
+        assert edge.to_id == 2
+
+
 class TestLoadMap:
     def _make_map(self) -> MapData:
         return MapData(

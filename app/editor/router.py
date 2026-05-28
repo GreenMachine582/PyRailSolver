@@ -105,6 +105,27 @@ async def add_edge(
     return _canvas_response(request)
 
 
+@router.put("/edges/{edge_index}", response_class=HTMLResponse)
+async def update_edge(
+    request: Request,
+    edge_index: int,
+    direction: str = Form("bidirectional"),
+    cost: int = Form(0),
+    distance: float = Form(1.0),
+    capacity: int = Form(1),
+    speed_limit: int = Form(100),
+) -> Response:
+    try:
+        dir_val = Direction(direction)
+    except ValueError:
+        raise HTTPException(
+            status_code=422, detail=f"Invalid direction: {direction!r}"
+        ) from None
+    if not editor.update_edge(edge_index, dir_val, cost, distance, capacity, speed_limit):
+        raise HTTPException(status_code=404, detail=f"Edge index {edge_index} not found")
+    return _canvas_response(request)
+
+
 @router.delete("/edges/{edge_index}", response_class=HTMLResponse)
 async def delete_edge(request: Request, edge_index: int) -> Response:
     if not editor.delete_edge(edge_index):

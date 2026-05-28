@@ -361,6 +361,67 @@ class TestDeleteEdge:
         assert "No edges yet" in r.text
 
 
+class TestUpdateEdge:
+    def _setup(self, client: TestClient) -> None:
+        client.post("/editor/nodes", data={"x": "1", "y": "1", "name": "A"})
+        client.post("/editor/nodes", data={"x": "5", "y": "5", "name": "B"})
+        client.post("/editor/edges", data={"from_id": "1", "to_id": "2", "cost": "10", "speed_limit": "80"})
+
+    def test_returns_200(self, client: TestClient) -> None:
+        self._setup(client)
+        r = client.put("/editor/edges/0", data={"direction": "bidirectional", "cost": "20", "distance": "2.0", "capacity": "1", "speed_limit": "100"})
+        assert r.status_code == 200
+
+    def test_cost_updated_in_svg(self, client: TestClient) -> None:
+        self._setup(client)
+        r = client.put("/editor/edges/0", data={"direction": "bidirectional", "cost": "42", "distance": "1.0", "capacity": "1", "speed_limit": "100"})
+        assert "Cost: 42" in r.text
+
+    def test_speed_updated_in_svg(self, client: TestClient) -> None:
+        self._setup(client)
+        r = client.put("/editor/edges/0", data={"direction": "bidirectional", "cost": "0", "distance": "1.0", "capacity": "1", "speed_limit": "55"})
+        assert "Speed: 55" in r.text
+
+    def test_direction_change_to_forward(self, client: TestClient) -> None:
+        self._setup(client)
+        r = client.put("/editor/edges/0", data={"direction": "forward", "cost": "0", "distance": "1.0", "capacity": "1", "speed_limit": "100"})
+        assert "&rarr;" in r.text
+
+    def test_out_of_bounds_returns_404(self, client: TestClient) -> None:
+        r = client.put("/editor/edges/99", data={"direction": "bidirectional", "cost": "0", "distance": "1.0", "capacity": "1", "speed_limit": "100"})
+        assert r.status_code == 404
+
+    def test_invalid_direction_returns_422(self, client: TestClient) -> None:
+        self._setup(client)
+        r = client.put("/editor/edges/0", data={"direction": "diagonal", "cost": "0", "distance": "1.0", "capacity": "1", "speed_limit": "100"})
+        assert r.status_code == 422
+
+    def test_edge_list_updated_after_edit(self, client: TestClient) -> None:
+        self._setup(client)
+        r = client.put("/editor/edges/0", data={"direction": "bidirectional", "cost": "0", "distance": "1.0", "capacity": "1", "speed_limit": "100"})
+        assert "editor-edge-list" in r.text
+
+
+class TestEditorEditModals:
+    def test_edit_node_modal_present(self, client: TestClient) -> None:
+        assert "editNodeModal" in client.get("/editor").text
+
+    def test_edit_edge_modal_present(self, client: TestClient) -> None:
+        assert "editEdgeModal" in client.get("/editor").text
+
+    def test_edit_node_button_in_node_list(self, client: TestClient) -> None:
+        client.post("/editor/nodes", data={"x": "1", "y": "1", "name": "A"})
+        r = client.get("/editor")
+        assert 'data-action="edit-node"' in r.text
+
+    def test_edit_edge_button_in_edge_list(self, client: TestClient) -> None:
+        client.post("/editor/nodes", data={"x": "1", "y": "1", "name": "A"})
+        client.post("/editor/nodes", data={"x": "5", "y": "5", "name": "B"})
+        client.post("/editor/edges", data={"from_id": "1", "to_id": "2"})
+        r = client.get("/editor")
+        assert 'data-action="edit-edge"' in r.text
+
+
 class TestExportMap:
     def test_returns_200(self, client: TestClient) -> None:
         assert client.get("/editor/export").status_code == 200
