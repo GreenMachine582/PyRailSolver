@@ -946,9 +946,10 @@
       if (this.files.length) this.closest('form').requestSubmit()
     })
 
-    // ─── sidebar node selection ───────────────────────────────────────────────
+    // ─── sidebar node / edge selection ───────────────────────────────────────────────
 
-    document.getElementById('editor-node-list').addEventListener('click', (e) => {
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#editor-node-list')) return
       const editBtn = e.target.closest('[data-action="edit-node"]')
       if (editBtn) {
         const li = editBtn.closest('[data-node-id]')
@@ -962,7 +963,8 @@
       highlightNode(selectedNodeId === id ? null : id)   // click again to deselect
     })
 
-    document.getElementById('editor-edge-list').addEventListener('click', (e) => {
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#editor-edge-list')) return
       const editBtn = e.target.closest('[data-action="edit-edge"]')
       if (editBtn) openEditEdgeModal(editBtn)
     })
