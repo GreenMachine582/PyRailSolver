@@ -240,6 +240,16 @@ function EditorInner() {
     }
   }, [])
 
+  const handleRename = useCallback(async (name) => {
+    try {
+      const state = await api.renamemap(name)
+      loadState(state)
+      notify(`Renamed to "${name}"`)
+    } catch (err) {
+      notify(`Rename failed: ${err.message}`, 'error')
+    }
+  }, [])
+
   const handleDownload = useCallback(() => {
     notify('Downloaded map.json')
   }, [])
@@ -265,6 +275,7 @@ function EditorInner() {
         activeTool={activeTool}
         onToolChange={setActiveTool}
         meta={meta}
+        onRename={handleRename}
         onSave={handleSaveMap}
         saving={saving}
         onDownload={handleDownload}

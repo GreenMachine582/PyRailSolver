@@ -127,6 +127,19 @@ async def delete_edge(edge_index: int) -> MapData:
     return editor.map_data
 
 
+class _RenameReq(BaseModel):
+    name: str
+
+
+@router.patch("/meta")
+async def update_meta(req: _RenameReq) -> MapData:
+    name = req.name.strip()
+    if not name:
+        raise HTTPException(status_code=422, detail="Name cannot be empty")
+    editor.rename(name)
+    return editor.map_data
+
+
 @router.post("/save")
 async def save_map() -> dict[str, str]:
     slug = re.sub(r"[^\w\-]", "_", editor.map_data.meta.name).strip("_") or "untitled"

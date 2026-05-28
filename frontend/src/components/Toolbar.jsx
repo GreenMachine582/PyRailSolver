@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { NODE_COLORS, NODE_LABELS, TOOLS } from '../constants'
 
 const HINTS = {
@@ -11,13 +11,49 @@ const HINTS = {
   endpoint: 'Click canvas to place an Endpoint',
 }
 
-export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload, onSave, saving, onThemeToggle, theme }) {
+export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload, onSave, saving, onRename, onThemeToggle, theme }) {
   const fileRef = useRef(null)
+  const nameRef = useRef(null)
+  const [editing, setEditing] = useState(false)
+  const [draft,   setDraft]   = useState('')
+
+  function startEdit() {
+    setDraft(meta.name)
+    setEditing(true)
+    setTimeout(() => nameRef.current?.select(), 0)
+  }
+
+  function commitEdit() {
+    setEditing(false)
+    if (draft.trim() && draft.trim() !== meta.name) onRename(draft.trim())
+  }
+
+  function onKeyDown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); commitEdit() }
+    if (e.key === 'Escape') setEditing(false)
+  }
 
   return (
     <div className="editor-toolbar">
       <a href="/" className="toolbar-brand">&#8592; Maps</a>
-      <span className="toolbar-map-name">{meta.name}</span>
+      {editing ? (
+        <input
+          ref={nameRef}
+          className="toolbar-map-name-input"
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onBlur={commitEdit}
+          onKeyDown={onKeyDown}
+        />
+      ) : (
+        <span
+          className="toolbar-map-name toolbar-map-name--editable"
+          onClick={startEdit}
+          title="Click to rename"
+        >
+          {meta.name}
+        </span>
+      )}
       <div className="toolbar-sep" />
 
       {TOOLS.map(({ key, label }) => (

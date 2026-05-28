@@ -106,6 +106,9 @@ class EditorState:
         del self._edges[edge_index]
         return True
 
+    def rename(self, name: str) -> None:
+        self._meta = self._meta.model_copy(update={"name": name})
+
     def load(self, data: MapData) -> None:
         self._meta = data.meta
         self._nodes = list(data.nodes)

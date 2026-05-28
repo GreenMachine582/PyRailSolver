@@ -53,6 +53,26 @@ html, body { margin: 0; overflow: hidden; height: 100%; }
   margin-right: 4px;
 }
 
+.toolbar-map-name--editable {
+  cursor: text;
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.toolbar-map-name--editable:hover { background: rgba(255,255,255,0.1); }
+
+.toolbar-map-name-input {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid #52b788;
+  border-radius: 3px;
+  color: #d8f3dc;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 1px 6px;
+  outline: none;
+  width: 160px;
+  flex-shrink: 0;
+}
+
 .toolbar-sep {
   width: 1px;
   height: 24px;
