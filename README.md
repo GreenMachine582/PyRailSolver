@@ -127,10 +127,11 @@ PyRailSolver treats each map as a graph optimisation problem: given the terrain 
 
 | Technology | Purpose |
 |---|---|
-| FastAPI Templates (Jinja2) | Server-side rendering |
-| HTMX | Dynamic UI without a JS framework |
-| Bootstrap 5 | Responsive layout and components |
-| SVG | Map and route rendering |
+| React 18 | Component framework for all pages |
+| React Router | Client-side routing (`/`, `/maps/:name`, `/editor`) |
+| React Flow (XYFlow) | Interactive node/edge canvas — viewer and editor |
+| Bootstrap 5 | Layout, components, and theme |
+| Vite | Build tooling and dev server |
 
 ### Tooling
 
@@ -249,7 +250,7 @@ PyRailSolver/
 │   ├── solver/       # Route discovery and optimisation
 │   ├── optimiser/    # Scoring and candidate ranking
 │   ├── renderer/     # SVG generation
-│   └── ui/           # Jinja2 templates and static assets
+│   └── ui/           # React SPA build output and route handlers
 │
 ├── tests/            # Pytest suites mirroring app/ structure
 ├── examples/         # Sample maps and solved scenarios
@@ -262,8 +263,6 @@ PyRailSolver/
 ---
 
 ## Getting Started
-
-> The project has no runnable code yet. This section describes the intended setup once the foundation milestone is complete.
 
 ### Prerequisites
 

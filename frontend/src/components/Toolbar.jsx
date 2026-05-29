@@ -11,7 +11,7 @@ const HINTS = {
   endpoint: 'Click canvas to place an Endpoint',
 }
 
-export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload, onSave, saving, onRename, onThemeToggle, theme }) {
+export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload, onSave, saving, onRename, onRenameError = () => {} }) {
   const fileRef = useRef(null)
   const nameRef = useRef(null)
   const [editing, setEditing] = useState(false)
@@ -24,8 +24,13 @@ export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload
   }
 
   function commitEdit() {
+    const trimmed = draft.trim()
     setEditing(false)
-    if (draft.trim() && draft.trim() !== meta.name) onRename(draft.trim())
+    if (!trimmed) {
+      onRenameError('Map name cannot be blank')
+      return
+    }
+    if (trimmed !== meta.name) onRename(trimmed)
   }
 
   function onKeyDown(e) {
@@ -34,90 +39,85 @@ export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload
   }
 
   return (
-    <div className="editor-toolbar">
-      <a href="/" className="toolbar-brand">&#8592; Maps</a>
-      {editing ? (
-        <input
-          ref={nameRef}
-          className="toolbar-map-name-input"
-          value={draft}
-          onChange={e => setDraft(e.target.value)}
-          onBlur={commitEdit}
-          onKeyDown={onKeyDown}
-        />
-      ) : (
-        <span
-          className="toolbar-map-name toolbar-map-name--editable"
-          onClick={startEdit}
-          title="Click to rename"
-        >
-          {meta.name}
-        </span>
-      )}
-      <div className="toolbar-sep" />
+    <>
+      <div className="editor-toolbar">
+          {editing ? (
+          <input
+            ref={nameRef}
+            className="toolbar-map-name-input"
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onBlur={commitEdit}
+            onKeyDown={onKeyDown}
+          />
+        ) : (
+          <span
+            className="toolbar-map-name toolbar-map-name--editable"
+            onClick={startEdit}
+            title="Click to rename"
+          >
+            {meta.name}
+          </span>
+        )}
+        <div className="toolbar-sep" />
 
-      {TOOLS.map(({ key, label }) => (
+        {TOOLS.map(({ key, label }) => (
+          <button
+            key={key}
+            className={`toolbar-btn${activeTool === key ? ' active' : ''}`}
+            onClick={() => onToolChange(key)}
+            title={key === 'pan' ? 'Pan / zoom' : `Place ${NODE_LABELS[key]}`}
+          >
+            {key !== 'pan' && (
+              <span className="node-dot-sm" style={{ background: NODE_COLORS[key] }} />
+            )}
+            {label}
+          </button>
+        ))}
+
+        <div className="toolbar-sep" />
+
         <button
-          key={key}
-          className={`toolbar-btn${activeTool === key ? ' active' : ''}`}
-          onClick={() => onToolChange(key)}
-          title={key === 'pan' ? 'Pan / zoom' : `Place ${NODE_LABELS[key]}`}
+          className="toolbar-btn"
+          title="Save map to project"
+          onClick={onSave}
+          disabled={saving}
         >
-          {key !== 'pan' && (
-            <span className="node-dot-sm" style={{ background: NODE_COLORS[key] }} />
-          )}
-          {label}
+          {saving ? 'Saving…' : 'Save'}
         </button>
-      ))}
+        <a
+          href="/api/editor/export"
+          className="toolbar-btn"
+          download="map.json"
+          title="Download map as JSON"
+          onClick={onDownload}
+        >
+          Download
+        </a>
+        <button
+          className="toolbar-btn"
+          title="Load map from JSON"
+          onClick={() => fileRef.current?.click()}
+        >
+          Load
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".json"
+          style={{ display: 'none' }}
+          onChange={e => {
+            const f = e.target.files?.[0]
+            if (f) onLoadFile(f)
+            e.target.value = ''
+          }}
+        />
 
-      <div className="toolbar-sep" />
+      </div>
 
-      <button
-        className="toolbar-btn"
-        title="Save map to project"
-        onClick={onSave}
-        disabled={saving}
-      >
-        {saving ? 'Saving…' : 'Save'}
-      </button>
-      <a
-        href="/api/editor/export"
-        className="toolbar-btn"
-        download="map.json"
-        title="Download map as JSON"
-        onClick={onDownload}
-      >
-        Download
-      </a>
-      <button
-        className="toolbar-btn"
-        title="Load map from JSON"
-        onClick={() => fileRef.current?.click()}
-      >
-        Load
-      </button>
-      <input
-        ref={fileRef}
-        type="file"
-        accept=".json"
-        style={{ display: 'none' }}
-        onChange={e => {
-          const f = e.target.files?.[0]
-          if (f) onLoadFile(f)
-          e.target.value = ''
-        }}
-      />
-
-      <button
-        className="toolbar-btn"
-        title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        onClick={onThemeToggle}
-        style={{ marginLeft: 'auto' }}
-      >
-        {theme === 'dark' ? '☀' : '☾'}
-      </button>
-
-      <span className="toolbar-hint">{HINTS[activeTool] ?? ''}</span>
-    </div>
+      <div className="toolbar-hint-bar">
+        {HINTS[activeTool] ?? ''}
+      </div>
+    </>
   )
 }

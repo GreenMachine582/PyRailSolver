@@ -4,6 +4,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel
 
+from app.api.maps import map_names
 from app.core.config import settings
 from app.editor.state import editor
 from app.parser.models import Direction, MapData, NodeType
@@ -135,7 +136,11 @@ class _RenameReq(BaseModel):
 async def update_meta(req: _RenameReq) -> MapData:
     name = req.name.strip()
     if not name:
-        raise HTTPException(status_code=422, detail="Name cannot be empty")
+        raise HTTPException(status_code=422, detail="Name cannot be blank")
+    if name != editor.map_data.meta.name:
+        slug = re.sub(r"[^\w\-]", "_", name).strip("_") or "untitled"
+        if name in map_names() or (settings.maps_dir / f"{slug}.json").exists():
+            raise HTTPException(status_code=409, detail=f"A map named '{name}' already exists")
     editor.rename(name)
     return editor.map_data
 

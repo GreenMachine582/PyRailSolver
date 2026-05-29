@@ -25,9 +25,10 @@ Environments/
 # ── Frontend ───────────────────────────────────────────────
 node_modules/
 frontend/dist/
+app/ui/static/editor/
 
 # ── Maps (user-generated data) ────────────────────────────
-maps/*.json
+maps/
 
 # ── IDE ───────────────────────────────────────────────────
 .idea/

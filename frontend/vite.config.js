@@ -7,8 +7,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api/editor': 'http://localhost:8080',
-      '/editor/export': 'http://localhost:8080',
+      '/api':    'http://localhost:8080',
+      '/static': 'http://localhost:8080',
     },
   },
   build: {

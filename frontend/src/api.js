@@ -38,6 +38,8 @@ function _del(url) {
 }
 
 export const api = {
+  getMaps:    ()             => fetch('/api/maps').then(_json),
+  getMap:     (name)         => fetch(`/api/maps/${name}`).then(_json),
   getState:   ()             => fetch(`${BASE}/state`).then(_json),
   addNode:    (data)         => _post(`${BASE}/nodes`, data),
   updateNode: (id, data)     => _put(`${BASE}/nodes/${id}`, data),
