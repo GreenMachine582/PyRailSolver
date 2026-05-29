@@ -62,7 +62,12 @@ function EditorInner() {
   }
 
   useEffect(() => {
-    api.getState().then(s => loadState(s)).catch(console.error)
+    api.getState().then(s => {
+      loadState(s)
+      if (s.nodes.length > 0 || s.edges.length > 0) {
+        notify(`Session restored: "${s.meta.name}"`, 'info')
+      }
+    }).catch(console.error)
   }, [])
 
   const onPaneClick = useCallback(async (e) => {

@@ -566,6 +566,12 @@ html, body { margin: 0; height: 100%; background: var(--bs-body-bg); color: var(
   border: 1px solid #52b788;
 }
 
+.toast-info {
+  background: #0d6efd;
+  color: #fff;
+  border: 1px solid #6ea8fe;
+}
+
 .toast-error {
   background: #b91c1c;
   color: #fff;
