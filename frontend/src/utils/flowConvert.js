@@ -9,7 +9,7 @@ export function toRFNode(node) {
     data: {
       nodeId:   node.id,
       nodeType: node.type,
-      label:    node.name || node.type,
+      label:    node.name,
       name:     node.name,
       x: node.x,
       y: node.y,
