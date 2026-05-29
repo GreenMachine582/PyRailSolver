@@ -43,6 +43,8 @@ class EditorState:
         capacity: int = 1,
         speed_limit: int = 100,
         edge_type: str = settings.default_edge_type,
+        source_handle: str = "",
+        target_handle: str = "",
     ) -> EdgeRow:
         edge = EdgeRow(
             from_id=from_id,
@@ -53,6 +55,8 @@ class EditorState:
             capacity=capacity,
             speed_limit=speed_limit,
             edge_type=edge_type,
+            source_handle=source_handle,
+            target_handle=target_handle,
         )
         self._edges.append(edge)
         return edge
@@ -75,6 +79,8 @@ class EditorState:
         capacity: int,
         speed_limit: int,
         edge_type: str = settings.default_edge_type,
+        source_handle: str = "",
+        target_handle: str = "",
     ) -> bool:
         if edge_index < 0 or edge_index >= len(self._edges):
             return False
@@ -86,6 +92,8 @@ class EditorState:
                 "capacity": capacity,
                 "speed_limit": speed_limit,
                 "edge_type": edge_type,
+                "source_handle": source_handle,
+                "target_handle": target_handle,
             }
         )
         return True

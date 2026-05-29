@@ -38,6 +38,8 @@ class _AddEdgeReq(BaseModel):
     capacity: int = 1
     speed_limit: int = 100
     edge_type: str = settings.default_edge_type
+    source_handle: str = ""
+    target_handle: str = ""
 
 
 class _UpdateEdgeReq(BaseModel):
@@ -47,6 +49,8 @@ class _UpdateEdgeReq(BaseModel):
     capacity: int = 1
     speed_limit: int = 100
     edge_type: str = settings.default_edge_type
+    source_handle: str = ""
+    target_handle: str = ""
 
 
 def _nt(value: str) -> NodeType:
@@ -111,14 +115,16 @@ async def add_edge(req: _AddEdgeReq) -> MapData:
     if req.from_id == req.to_id:
         raise HTTPException(status_code=422, detail="from_id and to_id must differ")
     editor.add_edge(req.from_id, req.to_id, _dir(req.direction),
-                    req.cost, req.distance, req.capacity, req.speed_limit, req.edge_type)
+                    req.cost, req.distance, req.capacity, req.speed_limit,
+                    req.edge_type, req.source_handle, req.target_handle)
     return editor.map_data
 
 
 @router.put("/edges/{edge_index}")
 async def update_edge(edge_index: int, req: _UpdateEdgeReq) -> MapData:
     if not editor.update_edge(edge_index, _dir(req.direction),
-                               req.cost, req.distance, req.capacity, req.speed_limit, req.edge_type):
+                               req.cost, req.distance, req.capacity, req.speed_limit,
+                               req.edge_type, req.source_handle, req.target_handle):
         raise HTTPException(status_code=404, detail=f"Edge {edge_index} not found")
     return editor.map_data
 

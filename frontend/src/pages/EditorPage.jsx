@@ -146,8 +146,13 @@ function EditorInner() {
   const handleEdgeConfirm = useCallback(async (props) => {
     if (!pendingConn) return
     const from_id = parseInt(pendingConn.source)
-    const to_id   = parseInt(pendingConn.target)
-    try { const state = await api.addEdge({ from_id, to_id, ...props }); loadState(state, true) }
+    const to_id = parseInt(pendingConn.target)
+    const source_handle = pendingConn.sourceHandle || ''
+    const target_handle = pendingConn.targetHandle || ''
+    try {
+      const state = await api.addEdge({ from_id, to_id, source_handle, target_handle, ...props })
+      loadState(state, true)
+    }
     catch (err) { console.error(err) }
     setPendingConn(null)
   }, [pendingConn])

@@ -44,6 +44,8 @@ class EdgeRow(BaseModel):
     direction: Direction = Direction.bidirectional
     speed_limit: int = 100
     edge_type: str = settings.default_edge_type
+    source_handle: str = ""
+    target_handle: str = ""
 
 
 class TrainRow(BaseModel):

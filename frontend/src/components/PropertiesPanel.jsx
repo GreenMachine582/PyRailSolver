@@ -193,7 +193,7 @@ function EdgePanel({ data, nodes, onSave, onDelete }) {
         <div className="props-actions">
           <button
             className="btn btn-primary btn-sm"
-            onClick={() => onSave(data.index, { direction, cost, distance, capacity, speed_limit: speed, edge_type: edgeType })}
+            onClick={() => onSave(data.index, { direction, cost, distance, capacity, speed_limit: speed, edge_type: edgeType, source_handle: data.source_handle || '', target_handle: data.target_handle || '' })}
           >Save</button>
           <button
             className="btn btn-outline-danger btn-sm"
