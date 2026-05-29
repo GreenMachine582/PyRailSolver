@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import {
   ReactFlow, Background, Controls, MiniMap,
   ReactFlowProvider, useNodesState, useEdgesState,
+  ConnectionMode,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -15,8 +16,13 @@ import { useTheme }     from '../hooks/useTheme'
 
 const NODE_TYPES = { railNode: RailNode }
 
+const toViewerNode = (node) => {
+  const rf = toRFNode(node)
+  return { ...rf, data: { ...rf.data, viewer: true } }
+}
+
 function ViewerCanvas({ mapData, theme }) {
-  const [nodes, , onNodesChange] = useNodesState(mapData.nodes.map(toRFNode))
+  const [nodes, , onNodesChange] = useNodesState(mapData.nodes.map(toViewerNode))
   const [edges, , onEdgesChange] = useEdgesState(mapData.edges.map((e, i) => toRFEdge(e, i)))
 
   return (
@@ -26,6 +32,7 @@ function ViewerCanvas({ mapData, theme }) {
       nodeTypes={NODE_TYPES}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
+      connectionMode={ConnectionMode.Loose}
       nodesDraggable={false}
       nodesConnectable={false}
       elementsSelectable={false}

@@ -30,7 +30,10 @@ export function RailNode({ data, selected }) {
   return (
     <div className="rail-node-wrapper">
       {HANDLES.map(({ position, id }) => (
-        <Handle key={id} type="source" position={position} id={id} style={HANDLE_STYLE} />
+        <Handle
+          key={id} type="source" position={position} id={id}
+          style={data.viewer ? { ...HANDLE_STYLE, visibility: 'hidden', pointerEvents: 'none' } : HANDLE_STYLE}
+        />
       ))}
 
       {isCircle ? (
