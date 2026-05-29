@@ -40,6 +40,8 @@ function _del(url) {
 export const api = {
   getMaps:    ()             => fetch('/api/maps').then(_json),
   getMap:     (name)         => fetch(`/api/maps/${name}`).then(_json),
+  deleteMap:  (name)         => _del(`/api/maps/${name}`),
+  openMap:    (name)         => _post(`${BASE}/open/${encodeURIComponent(name)}`, {}),
   getState:   ()             => fetch(`${BASE}/state`).then(_json),
   addNode:    (data)         => _post(`${BASE}/nodes`, data),
   updateNode: (id, data)     => _put(`${BASE}/nodes/${id}`, data),
@@ -49,6 +51,7 @@ export const api = {
   updateEdge: (idx, data)    => _put(`${BASE}/edges/${idx}`, data),
   deleteEdge: (idx)          => _del(`${BASE}/edges/${idx}`),
   renamemap:  (name)         => _patch(`${BASE}/meta`, { name }),
+  resetEditor: ()            => _post(`${BASE}/reset`, {}),
   saveMap:    ()             => _post(`${BASE}/save`, {}),
   loadFile:   (file)         => {
     const fd = new FormData()

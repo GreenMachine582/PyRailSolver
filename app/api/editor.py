@@ -4,7 +4,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from app.api.maps import map_names
+from app.api.maps import find_map_file, load_map_file, map_names
 from app.core.config import settings
 from app.editor.state import editor
 from app.parser.models import Direction, MapData, NodeType
@@ -170,6 +170,13 @@ async def load_map(file: UploadFile = File(...)) -> MapData:
     except Exception as exc:
         raise HTTPException(status_code=422, detail=f"Invalid map file: {exc}") from exc
     editor.load(data)
+    return editor.map_data
+
+
+@router.post("/open/{name}")
+async def open_map(name: str) -> MapData:
+    path = find_map_file(name)
+    editor.load(load_map_file(path))
     return editor.map_data
 
 

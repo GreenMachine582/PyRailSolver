@@ -14,6 +14,10 @@ router = APIRouter(prefix="/api/maps", tags=["maps"])
 _PROJECT_ROOT = Path(__file__).parents[2]
 
 
+def _maps_dir() -> Path:
+    return _PROJECT_ROOT / settings.maps_dir
+
+
 def _map_files() -> list[Path]:
     # Collect CSV maps from examples and maps dirs, then overlay JSON maps from
     # maps_dir — a saved JSON map takes precedence over a same-stem CSV.
@@ -22,11 +26,19 @@ def _map_files() -> list[Path]:
         if d.is_dir():
             for f in sorted(d.glob("*.csv")):
                 by_stem.setdefault(f.stem, f)
-    maps_dir = _PROJECT_ROOT / settings.maps_dir
-    if maps_dir.is_dir():
-        for f in sorted(maps_dir.glob("*.json")):
+    md = _maps_dir()
+    if md.is_dir():
+        for f in sorted(md.glob("*.json")):
             by_stem[f.stem] = f
     return sorted(by_stem.values(), key=lambda p: p.stem)
+
+
+def _is_editable(path: Path) -> bool:
+    try:
+        path.relative_to(_maps_dir())
+        return True
+    except ValueError:
+        return False
 
 
 def map_names() -> list[str]:
@@ -38,6 +50,11 @@ def find_map_file(name: str) -> Path:
         if path.stem == name:
             return path
     raise HTTPException(status_code=404, detail=f"Map '{name}' not found")
+
+
+class MapListItem(BaseModel):
+    name: str
+    editable: bool
 
 
 class MapStatsResponse(BaseModel):
@@ -58,12 +75,21 @@ class MapDataResponse(BaseModel):
     warnings: list[str]
 
 
-@router.get("", response_model=list[str])
-async def list_maps() -> list[str]:
-    return map_names()
+@router.get("", response_model=list[MapListItem])
+async def list_maps() -> list[MapListItem]:
+    return [MapListItem(name=f.stem, editable=_is_editable(f)) for f in _map_files()]
 
 
-def _load_map(path: Path) -> MapData:
+@router.delete("/{name}")
+async def delete_map(name: str) -> dict[str, str]:
+    path = find_map_file(name)
+    if not _is_editable(path):
+        raise HTTPException(status_code=403, detail="Example maps cannot be deleted")
+    path.unlink()
+    return {"deleted": name}
+
+
+def load_map_file(path: Path) -> MapData:
     if path.suffix == ".json":
         try:
             return MapData.model_validate_json(path.read_text(encoding="utf-8"))
@@ -78,7 +104,7 @@ def _load_map(path: Path) -> MapData:
 @router.get("/{name}", response_model=MapDataResponse)
 async def get_map(name: str) -> MapDataResponse:
     path = find_map_file(name)
-    map_data = _load_map(path)
+    map_data = load_map_file(path)
 
     graph = build_graph(map_data)
     data_result = validate_map_data(map_data)
