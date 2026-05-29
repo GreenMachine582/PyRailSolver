@@ -1,3 +1,4 @@
+from app.core.config import settings
 from app.parser.models import Direction, EdgeRow, MapData, MapMeta, NodeRow, NodeType
 
 
@@ -41,6 +42,7 @@ class EditorState:
         distance: float = 1.0,
         capacity: int = 1,
         speed_limit: int = 100,
+        edge_type: str = settings.default_edge_type,
     ) -> EdgeRow:
         edge = EdgeRow(
             from_id=from_id,
@@ -50,6 +52,7 @@ class EditorState:
             distance=distance,
             capacity=capacity,
             speed_limit=speed_limit,
+            edge_type=edge_type,
         )
         self._edges.append(edge)
         return edge
@@ -71,6 +74,7 @@ class EditorState:
         distance: float,
         capacity: int,
         speed_limit: int,
+        edge_type: str = settings.default_edge_type,
     ) -> bool:
         if edge_index < 0 or edge_index >= len(self._edges):
             return False
@@ -81,6 +85,7 @@ class EditorState:
                 "distance": distance,
                 "capacity": capacity,
                 "speed_limit": speed_limit,
+                "edge_type": edge_type,
             }
         )
         return True

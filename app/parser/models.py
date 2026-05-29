@@ -2,6 +2,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel
 
+from app.core.config import settings
+
 
 class NodeType(StrEnum):
     station = "station"
@@ -41,6 +43,7 @@ class EdgeRow(BaseModel):
     capacity: int = 1
     direction: Direction = Direction.bidirectional
     speed_limit: int = 100
+    edge_type: str = settings.default_edge_type
 
 
 class TrainRow(BaseModel):

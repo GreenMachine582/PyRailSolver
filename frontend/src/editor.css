@@ -134,6 +134,20 @@ html, body { margin: 0; height: 100%; background: var(--bs-body-bg); color: var(
   flex-shrink: 0;
 }
 
+.toolbar-select {
+  padding: 3px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid #2d6a4f;
+  background: transparent;
+  color: #d8f3dc;
+  cursor: pointer;
+  flex-shrink: 0;
+  outline: none;
+}
+.toolbar-select:hover  { border-color: #52b788; }
+.toolbar-select option { background: #1b4332; color: #d8f3dc; }
+
 .toolbar-hint-bar {
   font-size: 11px;
   height: 20px;

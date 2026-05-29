@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NODE_COLORS, NODE_LABELS } from '../constants'
+import { NODE_COLORS, NODE_LABELS, EDGE_STYLES, DEFAULT_EDGE_TYPE } from '../constants'
 
 // ─── Inline confirm dialog ────────────────────────────────
 
@@ -134,6 +134,7 @@ function EdgePanel({ data, nodes, onSave, onDelete }) {
   const [distance,   setDistance]  = useState(data.distance   ?? 1.0)
   const [capacity,   setCapacity]  = useState(data.capacity   ?? 1)
   const [speed,      setSpeed]     = useState(data.speed_limit ?? 100)
+  const [edgeType,   setEdgeType]  = useState(data.edge_type  ?? DEFAULT_EDGE_TYPE)
   const [confirming, setConfirming] = useState(false)
 
   const fromNode = nodes.find(n => n.id === String(data.from_id))
@@ -177,10 +178,22 @@ function EdgePanel({ data, nodes, onSave, onDelete }) {
             </div>
           ))}
         </div>
+        <div className="props-field">
+          <label>Style</label>
+          <select
+            className="form-select form-select-sm"
+            value={edgeType}
+            onChange={e => setEdgeType(e.target.value)}
+          >
+            {EDGE_STYLES.map(({ value, label }) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </div>
         <div className="props-actions">
           <button
             className="btn btn-primary btn-sm"
-            onClick={() => onSave(data.index, { direction, cost, distance, capacity, speed_limit: speed })}
+            onClick={() => onSave(data.index, { direction, cost, distance, capacity, speed_limit: speed, edge_type: edgeType })}
           >Save</button>
           <button
             className="btn btn-outline-danger btn-sm"

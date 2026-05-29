@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { NODE_COLORS, NODE_LABELS, TOOLS } from '../constants'
+import { NODE_COLORS, NODE_LABELS, TOOLS, EDGE_STYLES } from '../constants'
 
 const HINTS = {
   pan:      'Drag to pan · scroll to zoom · click node/edge to select · Delete to remove',
@@ -11,7 +11,7 @@ const HINTS = {
   endpoint: 'Click canvas to place an Endpoint',
 }
 
-export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload, onSave, saving, onRename, onRenameError = () => {} }) {
+export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload, onSave, saving, onRename, onRenameError = () => {}, edgeType, onEdgeTypeChange }) {
   const fileRef = useRef(null)
   const nameRef = useRef(null)
   const [editing, setEditing] = useState(false)
@@ -112,6 +112,19 @@ export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload
             e.target.value = ''
           }}
         />
+
+        <div className="toolbar-sep" />
+
+        <select
+          className="toolbar-select"
+          value={edgeType}
+          onChange={e => onEdgeTypeChange(e.target.value)}
+          title="Track style"
+        >
+          {EDGE_STYLES.map(({ value, label }) => (
+            <option key={value} value={value}>{label}</option>
+          ))}
+        </select>
 
       </div>
 

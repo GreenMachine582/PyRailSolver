@@ -16,7 +16,7 @@ import { Notifications }   from '../components/Notifications'
 import { UnsavedModal }    from '../components/UnsavedModal'
 import { PageLayout }      from '../components/PageLayout'
 import { api }             from '../api'
-import { GRID_SIZE, NODE_COLORS } from '../constants'
+import { GRID_SIZE, NODE_COLORS, DEFAULT_EDGE_TYPE } from '../constants'
 import { toRFNode, toRFEdge }     from '../utils/flowConvert'
 import { useTheme }               from '../hooks/useTheme'
 
@@ -32,8 +32,15 @@ function EditorInner() {
   const [theme]                       = useTheme()
   const [saving, setSaving]          = useState(false)
   const [isDirty, setIsDirty]        = useState(false)
+  const [edgeType, setEdgeType]      = useState(
+    () => localStorage.getItem('prs-edge-type') || DEFAULT_EDGE_TYPE
+  )
   const [notifications, setNotifications] = useState([])
   const blocker = useBlocker(isDirty)
+
+  useEffect(() => {
+    localStorage.setItem('prs-edge-type', edgeType)
+  }, [edgeType])
 
   function notify(message, type = 'success') {
     const id = Date.now()
@@ -207,6 +214,8 @@ function EditorInner() {
         saving={saving}
         onDownload={handleDownload}
         onLoadFile={handleLoadFile}
+        edgeType={edgeType}
+        onEdgeTypeChange={setEdgeType}
       />
       <div className="editor-body">
         <div className="editor-canvas" style={{ cursor: isPan ? undefined : 'crosshair' }}>
@@ -258,6 +267,7 @@ function EditorInner() {
         <EdgeDialog
           connection={pendingConn}
           nodes={nodes}
+          defaultEdgeType={edgeType}
           onConfirm={handleEdgeConfirm}
           onCancel={() => setPendingConn(null)}
         />

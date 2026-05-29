@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     maps_dir: Path = Path("maps")
     examples_dir: Path = Path("examples")
 
+    # Editor defaults
+    default_edge_type: str = "smoothstep"
+
     # Logging
     log_level: str = "INFO"
 

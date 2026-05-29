@@ -1,11 +1,13 @@
 import { useState } from 'react'
+import { EDGE_STYLES, DEFAULT_EDGE_TYPE } from '../constants'
 
-export function EdgeDialog({ connection, nodes, onConfirm, onCancel }) {
+export function EdgeDialog({ connection, nodes, defaultEdgeType = DEFAULT_EDGE_TYPE, onConfirm, onCancel }) {
   const [direction, setDirection] = useState('bidirectional')
   const [cost,      setCost]      = useState(0)
   const [distance,  setDistance]  = useState(1.0)
   const [capacity,  setCapacity]  = useState(1)
   const [speed,     setSpeed]     = useState(100)
+  const [edgeType,  setEdgeType]  = useState(defaultEdgeType)
 
   const fromNode = nodes.find(n => n.id === connection.source)
   const toNode   = nodes.find(n => n.id === connection.target)
@@ -61,10 +63,23 @@ export function EdgeDialog({ connection, nodes, onConfirm, onCancel }) {
             ))}
           </div>
 
+          <div className="mb-3">
+            <label className="form-label small fw-semibold mb-1">Track style</label>
+            <select
+              className="form-select form-select-sm"
+              value={edgeType}
+              onChange={e => setEdgeType(e.target.value)}
+            >
+              {EDGE_STYLES.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="d-flex gap-2">
             <button
               className="btn btn-primary btn-sm"
-              onClick={() => onConfirm({ direction, cost, distance, capacity, speed_limit: speed })}
+              onClick={() => onConfirm({ direction, cost, distance, capacity, speed_limit: speed, edge_type: edgeType })}
             >Draw</button>
             <button className="btn btn-outline-secondary btn-sm" onClick={onCancel}>Cancel</button>
           </div>

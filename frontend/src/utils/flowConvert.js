@@ -1,5 +1,5 @@
 import { MarkerType } from '@xyflow/react'
-import { GRID_SIZE } from '../constants'
+import { GRID_SIZE, DEFAULT_EDGE_TYPE } from '../constants'
 
 export function toRFNode(node) {
   return {
@@ -24,7 +24,7 @@ export function toRFEdge(edge, index) {
     id: `e-${index}`,
     source: String(edge.from_id),
     target: String(edge.to_id),
-    type: 'smoothstep',
+    type: edge.edge_type || DEFAULT_EDGE_TYPE,
     animated: false,
     label: edge.cost > 0 ? String(edge.cost) : undefined,
     labelStyle: { fontSize: 10 },
@@ -39,6 +39,7 @@ export function toRFEdge(edge, index) {
       distance:    edge.distance,
       capacity:    edge.capacity,
       speed_limit: edge.speed_limit,
+      edge_type:   edge.edge_type || DEFAULT_EDGE_TYPE,
     },
   }
 }

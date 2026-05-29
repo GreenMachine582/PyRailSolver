@@ -1,5 +1,14 @@
 export const GRID_SIZE = 80
 
+export const DEFAULT_EDGE_TYPE = 'smoothstep'
+
+export const EDGE_STYLES = [
+  { value: 'smoothstep', label: 'Smooth'   },
+  { value: 'default',    label: 'Curved'   },
+  { value: 'step',       label: 'Square'   },
+  { value: 'straight',   label: 'Straight' },
+]
+
 export const NODE_COLORS = {
   station:  '#0d6efd',
   platform: '#6ea8fe',
