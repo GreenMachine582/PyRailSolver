@@ -1,8 +1,4 @@
-from unittest.mock import patch
-
 from fastapi.testclient import TestClient
-
-from app.parser.csv_parser import MapParseError
 
 
 class TestIndex:
@@ -12,21 +8,6 @@ class TestIndex:
     def test_content_type_html(self, client: TestClient) -> None:
         assert "text/html" in client.get("/").headers["content-type"]
 
-    def test_lists_tutorial_map(self, client: TestClient) -> None:
-        assert "tutorial_1" in client.get("/").text
-
-    def test_contains_nav(self, client: TestClient) -> None:
-        assert "PyRailSolver" in client.get("/").text
-
-    def test_nav_has_editor_link(self, client: TestClient) -> None:
-        assert 'href="/editor"' in client.get("/").text
-
-    def test_nav_has_maps_link(self, client: TestClient) -> None:
-        assert 'href="/"' in client.get("/").text
-
-    def test_index_has_new_map_button(self, client: TestClient) -> None:
-        assert "New Map" in client.get("/").text
-
 
 class TestMapViewer:
     def test_returns_200(self, client: TestClient) -> None:
@@ -35,19 +16,6 @@ class TestMapViewer:
     def test_content_type_html(self, client: TestClient) -> None:
         assert "text/html" in client.get("/maps/tutorial_1").headers["content-type"]
 
-    def test_shows_map_name(self, client: TestClient) -> None:
-        assert "Tutorial 1" in client.get("/maps/tutorial_1").text
-
-    def test_shows_node_count(self, client: TestClient) -> None:
-        assert "7" in client.get("/maps/tutorial_1").text
-
-    def test_shows_grid_dimensions(self, client: TestClient) -> None:
-        assert "20" in client.get("/maps/tutorial_1").text
-        assert "15" in client.get("/maps/tutorial_1").text
-
-    def test_not_found(self, client: TestClient) -> None:
-        assert client.get("/maps/nonexistent").status_code == 404
-
-    def test_parse_error_returns_422(self, client: TestClient) -> None:
-        with patch("app.ui.views.parse_map", side_effect=MapParseError("bad csv")):
-            assert client.get("/maps/tutorial_1").status_code == 422
+    def test_unknown_map_still_serves_spa(self, client: TestClient) -> None:
+        # Routing is handled client-side; the server always returns the SPA shell.
+        assert client.get("/maps/nonexistent").status_code == 200

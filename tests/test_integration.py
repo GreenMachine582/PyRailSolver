@@ -1,7 +1,7 @@
 """
 Integration tests for Milestone 1: load a map and display graph statistics.
 
-Exercises the full pipeline: CSV parse → structural validation →
+Exercises the full pipeline: JSON load → structural validation →
 graph build → graph validation → statistics queries.
 """
 from pathlib import Path
@@ -10,16 +10,17 @@ import pytest
 
 from app.graph.rail_graph import build_graph
 from app.graph.validation import validate_map_data, validate_rail_graph
-from app.parser.csv_parser import parse_map
-from app.parser.models import NodeType
+from app.parser.models import MapData, NodeType
 
 
 class TestTutorial1Pipeline:
-    """Full end-to-end pipeline using examples/tutorial_1.csv."""
+    """Full end-to-end pipeline using examples/tutorial_1.json."""
 
     @pytest.fixture(scope="class")
     def pipeline(self):  # type: ignore[no-untyped-def]
-        map_data = parse_map(Path("examples/tutorial_1.csv"))
+        map_data = MapData.model_validate_json(
+            Path("examples/tutorial_1.json").read_text(encoding="utf-8")
+        )
         graph = build_graph(map_data)
         return map_data, graph
 
@@ -42,7 +43,7 @@ class TestTutorial1Pipeline:
         assert graph.node_count == 7
 
     def test_directed_edge_count(self, pipeline) -> None:  # type: ignore[no-untyped-def]
-        # 4 bidir CSV edges → 8 directed + 3 forward CSV edges = 11 directed total
+        # 4 bidir edges → 8 directed + 3 forward edges = 11 directed total
         _, graph = pipeline
         assert graph.edge_count == 11
 

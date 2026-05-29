@@ -139,7 +139,7 @@ async def update_meta(req: _RenameReq) -> MapData:
         raise HTTPException(status_code=422, detail="Name cannot be blank")
     if name != editor.map_data.meta.name:
         slug = re.sub(r"[^\w\-]", "_", name).strip("_") or "untitled"
-        if name in map_names() or (settings.maps_dir / f"{slug}.json").exists():
+        if slug in map_names() or (settings.maps_dir / f"{slug}.json").exists():
             raise HTTPException(status_code=409, detail=f"A map named '{name}' already exists")
     editor.rename(name)
     return editor.map_data

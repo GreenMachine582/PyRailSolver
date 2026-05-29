@@ -1,0 +1,25 @@
+{
+  "meta": { "name": "Tutorial 1", "width": 20, "height": 15 },
+  "nodes": [
+    { "id": 1, "type": "station",  "x":  2, "y":  3, "name": "Coal Mine",      "capacity": 2 },
+    { "id": 2, "type": "station",  "x": 18, "y": 12, "name": "Power Plant",    "capacity": 2 },
+    { "id": 3, "type": "junction", "x": 10, "y":  7, "name": "",               "capacity": 1 },
+    { "id": 4, "type": "platform", "x":  2, "y":  5, "name": "Mine Platform",  "capacity": 2 },
+    { "id": 5, "type": "depot",    "x": 10, "y":  2, "name": "Yard",           "capacity": 1 },
+    { "id": 6, "type": "waypoint", "x":  5, "y": 10, "name": "",               "capacity": 1 },
+    { "id": 7, "type": "endpoint", "x": 18, "y":  3, "name": "North Siding",   "capacity": 1 }
+  ],
+  "edges": [
+    { "from_id": 1, "to_id": 3, "cost": 100, "distance": 8.0,  "capacity": 1, "direction": "bidirectional", "speed_limit": 50 },
+    { "from_id": 3, "to_id": 2, "cost": 150, "distance": 10.0, "capacity": 1, "direction": "bidirectional", "speed_limit": 50 },
+    { "from_id": 1, "to_id": 4, "cost":  10, "distance": 1.0,  "capacity": 2, "direction": "bidirectional", "speed_limit": 20 },
+    { "from_id": 3, "to_id": 5, "cost":  50, "distance": 5.0,  "capacity": 1, "direction": "forward",       "speed_limit": 40 },
+    { "from_id": 1, "to_id": 6, "cost":  80, "distance": 6.0,  "capacity": 1, "direction": "forward",       "speed_limit": 60 },
+    { "from_id": 6, "to_id": 2, "cost": 120, "distance": 9.0,  "capacity": 1, "direction": "bidirectional", "speed_limit": 50 },
+    { "from_id": 3, "to_id": 7, "cost":  30, "distance": 3.0,  "capacity": 1, "direction": "forward",       "speed_limit": 30 }
+  ],
+  "trains": [
+    { "id": 1, "origin_id": 1, "destination_id": 2, "cargo": "coal", "speed": 40, "spawn_tick": 0, "priority": 2 },
+    { "id": 2, "origin_id": 2, "destination_id": 1, "cargo": "",     "speed": 50, "spawn_tick": 5, "priority": 1 }
+  ]
+}

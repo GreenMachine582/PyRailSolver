@@ -7,7 +7,6 @@ from pydantic import BaseModel, ValidationError
 from app.core import settings
 from app.graph.rail_graph import build_graph
 from app.graph.validation import validate_map_data, validate_rail_graph
-from app.parser.csv_parser import MapParseError, parse_map
 from app.parser.models import EdgeRow, MapData, MapMeta, NodeRow, NodeType, TrainRow
 
 router = APIRouter(prefix="/api/maps", tags=["maps"])
@@ -20,13 +19,12 @@ def _maps_dir() -> Path:
 
 
 def _map_files() -> list[Path]:
-    # Collect CSV maps from examples and maps dirs, then overlay JSON maps from
-    # maps_dir — a saved JSON map takes precedence over a same-stem CSV.
+    # Examples first (setdefault); maps_dir overrides for same stem.
     by_stem: dict[str, Path] = {}
-    for d in [_PROJECT_ROOT / settings.examples_dir, _PROJECT_ROOT / settings.maps_dir]:
-        if d.is_dir():
-            for f in sorted(d.glob("*.csv")):
-                by_stem.setdefault(f.stem, f)
+    examples = _PROJECT_ROOT / settings.examples_dir
+    if examples.is_dir():
+        for f in sorted(examples.glob("*.json")):
+            by_stem.setdefault(f.stem, f)
     md = _maps_dir()
     if md.is_dir():
         for f in sorted(md.glob("*.json")):
@@ -44,10 +42,8 @@ def _is_editable(path: Path) -> bool:
 
 def _display_name(path: Path) -> str:
     try:
-        if path.suffix == ".json":
-            return json.loads(path.read_text(encoding="utf-8")).get("meta", {}).get("name") or path.stem
-        return parse_map(path).meta.name
-    except Exception:
+        return json.loads(path.read_text(encoding="utf-8")).get("meta", {}).get("name") or path.stem
+    except Exception:  # noqa: BLE001
         return path.stem
 
 
@@ -60,6 +56,13 @@ def find_map_file(name: str) -> Path:
         if path.stem == name:
             return path
     raise HTTPException(status_code=404, detail=f"Map '{name}' not found")
+
+
+def load_map_file(path: Path) -> MapData:
+    try:
+        return MapData.model_validate_json(path.read_text(encoding="utf-8"))
+    except (ValidationError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 class MapListItem(BaseModel):
@@ -98,18 +101,6 @@ async def delete_map(name: str) -> dict[str, str]:
         raise HTTPException(status_code=403, detail="Example maps cannot be deleted")
     path.unlink()
     return {"deleted": name}
-
-
-def load_map_file(path: Path) -> MapData:
-    if path.suffix == ".json":
-        try:
-            return MapData.model_validate_json(path.read_text(encoding="utf-8"))
-        except (ValidationError, ValueError) as exc:
-            raise HTTPException(status_code=422, detail=str(exc)) from exc
-    try:
-        return parse_map(path)
-    except MapParseError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get("/{name}", response_model=MapDataResponse)

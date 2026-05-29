@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
@@ -409,3 +410,32 @@ class TestResetState:
         _add_node(client)
         r = client.post("/api/editor/reset")
         assert r.json()["nodes"] == []
+
+
+# ─── POST /api/editor/open/{name} ───────────────────────
+
+
+class TestOpenMap:
+    def test_returns_200(self, client: TestClient, json_map_file: Path) -> None:
+        assert client.post("/api/editor/open/test_map").status_code == 200
+
+    def test_loads_meta(self, client: TestClient, json_map_file: Path) -> None:
+        client.post("/api/editor/open/test_map")
+        state = client.get("/api/editor/state").json()
+        assert state["meta"]["name"] == "Test Map"
+        assert state["meta"]["width"] == 10
+
+    def test_loads_nodes(self, client: TestClient, json_map_file: Path) -> None:
+        client.post("/api/editor/open/test_map")
+        state = client.get("/api/editor/state").json()
+        assert len(state["nodes"]) == 1
+        assert state["nodes"][0]["name"] == "Hub"
+
+    def test_replaces_existing_state(self, client: TestClient, json_map_file: Path) -> None:
+        _add_node(client, 3, 3, "Old Node")
+        client.post("/api/editor/open/test_map")
+        state = client.get("/api/editor/state").json()
+        assert not any(n["name"] == "Old Node" for n in state["nodes"])
+
+    def test_not_found_returns_404(self, client: TestClient, json_map_file: Path) -> None:
+        assert client.post("/api/editor/open/nonexistent").status_code == 404
