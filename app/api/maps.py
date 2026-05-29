@@ -1,13 +1,13 @@
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from app.core import settings
 from app.graph.rail_graph import build_graph
 from app.graph.validation import validate_map_data, validate_rail_graph
 from app.parser.csv_parser import MapParseError, parse_map
-from app.parser.models import EdgeRow, MapMeta, NodeRow, NodeType, TrainRow
+from app.parser.models import EdgeRow, MapData, MapMeta, NodeRow, NodeType, TrainRow
 
 router = APIRouter(prefix="/api/maps", tags=["maps"])
 
@@ -15,12 +15,18 @@ _PROJECT_ROOT = Path(__file__).parents[2]
 
 
 def _map_files() -> list[Path]:
-    dirs = [_PROJECT_ROOT / settings.examples_dir, _PROJECT_ROOT / settings.maps_dir]
-    files: list[Path] = []
-    for d in dirs:
+    # Collect CSV maps from examples and maps dirs, then overlay JSON maps from
+    # maps_dir — a saved JSON map takes precedence over a same-stem CSV.
+    by_stem: dict[str, Path] = {}
+    for d in [_PROJECT_ROOT / settings.examples_dir, _PROJECT_ROOT / settings.maps_dir]:
         if d.is_dir():
-            files.extend(sorted(d.glob("*.csv")))
-    return files
+            for f in sorted(d.glob("*.csv")):
+                by_stem.setdefault(f.stem, f)
+    maps_dir = _PROJECT_ROOT / settings.maps_dir
+    if maps_dir.is_dir():
+        for f in sorted(maps_dir.glob("*.json")):
+            by_stem[f.stem] = f
+    return sorted(by_stem.values(), key=lambda p: p.stem)
 
 
 def map_names() -> list[str]:
@@ -57,13 +63,22 @@ async def list_maps() -> list[str]:
     return map_names()
 
 
+def _load_map(path: Path) -> MapData:
+    if path.suffix == ".json":
+        try:
+            return MapData.model_validate_json(path.read_text(encoding="utf-8"))
+        except (ValidationError, ValueError) as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+    try:
+        return parse_map(path)
+    except MapParseError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
 @router.get("/{name}", response_model=MapDataResponse)
 async def get_map(name: str) -> MapDataResponse:
     path = find_map_file(name)
-    try:
-        map_data = parse_map(path)
-    except MapParseError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    map_data = _load_map(path)
 
     graph = build_graph(map_data)
     data_result = validate_map_data(map_data)
