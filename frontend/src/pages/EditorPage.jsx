@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { useBlocker } from 'react-router-dom'
 import {
   ReactFlow, Background, Controls, MiniMap,
   useNodesState, useEdgesState,
@@ -12,6 +13,7 @@ import { Toolbar }         from '../components/Toolbar'
 import { PropertiesPanel } from '../components/PropertiesPanel'
 import { EdgeDialog }      from '../components/EdgeDialog'
 import { Notifications }   from '../components/Notifications'
+import { UnsavedModal }    from '../components/UnsavedModal'
 import { PageLayout }      from '../components/PageLayout'
 import { api }             from '../api'
 import { GRID_SIZE, NODE_COLORS } from '../constants'
@@ -29,7 +31,9 @@ function EditorInner() {
   const [pendingConn, setPendingConn] = useState(null)
   const [theme]                       = useTheme()
   const [saving, setSaving]          = useState(false)
+  const [isDirty, setIsDirty]        = useState(false)
   const [notifications, setNotifications] = useState([])
+  const blocker = useBlocker(isDirty)
 
   function notify(message, type = 'success') {
     const id = Date.now()
@@ -43,14 +47,15 @@ function EditorInner() {
   const { screenToFlowPosition } = useReactFlow()
   const deletingNodes = useRef(false)
 
-  function loadState(state) {
+  function loadState(state, dirty = false) {
     setMeta(state.meta)
     setNodes(state.nodes.map(toRFNode))
     setEdges(state.edges.map((e, i) => toRFEdge(e, i)))
+    if (dirty) setIsDirty(true)
   }
 
   useEffect(() => {
-    api.getState().then(loadState).catch(console.error)
+    api.getState().then(s => loadState(s)).catch(console.error)
   }, [])
 
   const onPaneClick = useCallback(async (e) => {
@@ -60,7 +65,7 @@ function EditorInner() {
     const gy = Math.max(0, Math.min(meta.height - 1, Math.round(pos.y / GRID_SIZE)))
     try {
       const state = await api.addNode({ x: gx, y: gy, node_type: activeTool, name: '' })
-      loadState(state)
+      loadState(state, true)
       const newNode = state.nodes.at(-1)
       if (newNode) setSelected({ type: 'node', data: toRFNode(newNode).data })
     } catch (err) { console.error(err) }
@@ -73,7 +78,7 @@ function EditorInner() {
     const gy = Math.max(0, Math.min(meta.height - 1, Math.round(node.position.y / GRID_SIZE)))
     try {
       const state = await api.moveNode(parseInt(node.id), gx, gy)
-      loadState(state)
+      loadState(state, true)
     } catch (err) { console.error(err) }
   }, [meta])
 
@@ -82,7 +87,7 @@ function EditorInner() {
     try {
       for (const n of deleted) await api.deleteNode(parseInt(n.id))
       const state = await api.getState()
-      loadState(state)
+      loadState(state, true)
       setSelected(null)
     } catch (err) { console.error(err) }
     finally { deletingNodes.current = false }
@@ -94,7 +99,7 @@ function EditorInner() {
     try {
       for (const idx of indices) await api.deleteEdge(idx)
       const state = await api.getState()
-      loadState(state)
+      loadState(state, true)
       setSelected(null)
     } catch (err) { console.error(err) }
   }, [])
@@ -106,28 +111,28 @@ function EditorInner() {
   const handleSaveNode = useCallback(async (nodeId, name, nodeType) => {
     try {
       const state = await api.updateNode(nodeId, { name, node_type: nodeType })
-      loadState(state)
+      loadState(state, true)
       const updated = state.nodes.find(n => n.id === nodeId)
       if (updated) setSelected({ type: 'node', data: toRFNode(updated).data })
     } catch (err) { console.error(err) }
   }, [])
 
   const handleDeleteNode = useCallback(async (nodeId) => {
-    try { const state = await api.deleteNode(nodeId); loadState(state); setSelected(null) }
+    try { const state = await api.deleteNode(nodeId); loadState(state, true); setSelected(null) }
     catch (err) { console.error(err) }
   }, [])
 
   const handleSaveEdge = useCallback(async (index, updates) => {
     try {
       const state = await api.updateEdge(index, updates)
-      loadState(state)
+      loadState(state, true)
       const e = state.edges[index]
       if (e) setSelected({ type: 'edge', data: toRFEdge(e, index).data })
     } catch (err) { console.error(err) }
   }, [])
 
   const handleDeleteEdge = useCallback(async (index) => {
-    try { const state = await api.deleteEdge(index); loadState(state); setSelected(null) }
+    try { const state = await api.deleteEdge(index); loadState(state, true); setSelected(null) }
     catch (err) { console.error(err) }
   }, [])
 
@@ -135,7 +140,7 @@ function EditorInner() {
     if (!pendingConn) return
     const from_id = parseInt(pendingConn.source)
     const to_id   = parseInt(pendingConn.target)
-    try { const state = await api.addEdge({ from_id, to_id, ...props }); loadState(state) }
+    try { const state = await api.addEdge({ from_id, to_id, ...props }); loadState(state, true) }
     catch (err) { console.error(err) }
     setPendingConn(null)
   }, [pendingConn])
@@ -145,8 +150,11 @@ function EditorInner() {
     try {
       const { filename } = await api.saveMap()
       notify(`Saved: ${filename}`)
+      setIsDirty(false)
+      return true
     } catch (err) {
       notify(`Save failed: ${err.message}`, 'error')
+      return false
     } finally {
       setSaving(false)
     }
@@ -155,7 +163,7 @@ function EditorInner() {
   const handleRename = useCallback(async (name) => {
     try {
       const state = await api.renamemap(name)
-      loadState(state)
+      loadState(state, true)
       notify(`Renamed to "${name}"`)
     } catch (err) {
       notify(`Rename failed: ${err.message}`, 'error')
@@ -167,13 +175,23 @@ function EditorInner() {
   const handleLoadFile = useCallback(async (file) => {
     try {
       const state = await api.loadFile(file)
-      loadState(state)
+      loadState(state, true)
       setSelected(null)
       notify(`Loaded: ${file.name}`)
     } catch (err) {
       notify(`Load failed: ${err.message}`, 'error')
     }
   }, [])
+
+  const handleSaveAndLeave = useCallback(async () => {
+    const saved = await handleSaveMap()
+    if (saved) blocker.proceed()
+  }, [handleSaveMap, blocker])
+
+  const handleDiscard = useCallback(() => {
+    setIsDirty(false)
+    blocker.proceed()
+  }, [blocker])
 
   const isPan = activeTool === 'pan'
 
@@ -246,6 +264,16 @@ function EditorInner() {
       )}
 
       <Notifications items={notifications} onDismiss={dismissNotification} />
+
+      {blocker.state === 'blocked' && (
+        <UnsavedModal
+          mapName={meta.name}
+          saving={saving}
+          onSave={handleSaveAndLeave}
+          onDiscard={handleDiscard}
+          onCancel={() => blocker.reset()}
+        />
+      )}
     </PageLayout>
   )
 }

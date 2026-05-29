@@ -1,18 +1,10 @@
-import { Routes, Route } from 'react-router-dom'
-import './editor.css'
-import { ThemeProvider } from './hooks/useTheme'
+import { createBrowserRouter } from 'react-router-dom'
 import { MapListPage }   from './pages/MapListPage'
 import { MapViewerPage } from './pages/MapViewerPage'
 import { EditorPage }    from './pages/EditorPage'
 
-export function App() {
-  return (
-    <ThemeProvider>
-      <Routes>
-        <Route path="/"           element={<MapListPage />} />
-        <Route path="/maps/:name" element={<MapViewerPage />} />
-        <Route path="/editor"     element={<EditorPage />} />
-      </Routes>
-    </ThemeProvider>
-  )
-}
+export const router = createBrowserRouter([
+  { path: '/',           element: <MapListPage /> },
+  { path: '/maps/:name', element: <MapViewerPage /> },
+  { path: '/editor',     element: <EditorPage /> },
+])
