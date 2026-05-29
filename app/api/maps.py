@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -41,6 +42,15 @@ def _is_editable(path: Path) -> bool:
         return False
 
 
+def _display_name(path: Path) -> str:
+    try:
+        if path.suffix == ".json":
+            return json.loads(path.read_text(encoding="utf-8")).get("meta", {}).get("name") or path.stem
+        return parse_map(path).meta.name
+    except Exception:
+        return path.stem
+
+
 def map_names() -> list[str]:
     return [f.stem for f in _map_files()]
 
@@ -53,7 +63,8 @@ def find_map_file(name: str) -> Path:
 
 
 class MapListItem(BaseModel):
-    name: str
+    name: str      # display name from map metadata
+    slug: str      # file stem used for URL routing
     editable: bool
 
 
@@ -77,7 +88,7 @@ class MapDataResponse(BaseModel):
 
 @router.get("", response_model=list[MapListItem])
 async def list_maps() -> list[MapListItem]:
-    return [MapListItem(name=f.stem, editable=_is_editable(f)) for f in _map_files()]
+    return [MapListItem(name=_display_name(f), slug=f.stem, editable=_is_editable(f)) for f in _map_files()]
 
 
 @router.delete("/{name}")

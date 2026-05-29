@@ -41,7 +41,7 @@ export function MapListPage() {
     try {
       await api.deleteMap(name)
       setConfirmDelete(null)
-      setMaps(prev => prev.filter(m => m.name !== name))
+      setMaps(prev => prev.filter(m => m.slug !== name))
     } catch (err) {
       setError(`Could not delete map: ${err.message}`)
       setConfirmDelete(null)
@@ -70,32 +70,32 @@ export function MapListPage() {
 
       {maps.length > 0 && (
         <div className="map-list">
-          {maps.map(({ name, editable }) => (
-            <div key={name} className="map-list-item">
-              <Link to={`/maps/${name}`} className="map-list-name">{name}</Link>
+          {maps.map(({ name, slug, editable }) => (
+            <div key={slug} className="map-list-item">
+              <Link to={`/maps/${slug}`} className="map-list-name">{name}</Link>
               <div className="d-flex align-items-center gap-2">
-                {confirmDelete === name ? (
+                {confirmDelete === slug ? (
                   <>
                     <span className="text-danger small">Delete?</span>
-                    <button className="btn btn-danger btn-sm"    onClick={() => handleDelete(name)}>Yes</button>
+                    <button className="btn btn-danger btn-sm"         onClick={() => handleDelete(slug)}>Yes</button>
                     <button className="btn btn-outline-secondary btn-sm" onClick={() => setConfirmDelete(null)}>No</button>
                   </>
                 ) : (
                   <>
-                    <Link to={`/maps/${name}`} className="map-list-badge">View</Link>
+                    <Link to={`/maps/${slug}`} className="map-list-badge">View</Link>
                     {editable && (
                       <>
                         <button
                           className="btn btn-outline-secondary btn-sm"
                           title="Open in editor"
-                          onClick={() => handleEdit(name)}
+                          onClick={() => handleEdit(slug)}
                         >
                           <i className="bi bi-pencil" />
                         </button>
                         <button
                           className="btn btn-outline-danger btn-sm"
                           title="Delete map"
-                          onClick={() => setConfirmDelete(name)}
+                          onClick={() => setConfirmDelete(slug)}
                         >
                           <i className="bi bi-trash" />
                         </button>
