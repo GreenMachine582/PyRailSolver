@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { NODE_COLORS, NODE_LABELS, TOOLS, TOOL_HINTS, EDGE_STYLES } from '../constants'
 
 export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload, onSave, saving, onRename, onRenameError = () => {}, edgeType, onEdgeTypeChange }) {
@@ -31,6 +32,11 @@ export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload
   return (
     <>
       <div className="editor-toolbar">
+        <Link to="/" className="viewer-back" title="Back to Maps">
+          <i className="bi bi-arrow-left" />
+        </Link>
+        <div className="toolbar-sep" />
+
           {editing ? (
           <input
             ref={nameRef}
