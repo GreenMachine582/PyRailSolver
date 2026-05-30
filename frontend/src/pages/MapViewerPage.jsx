@@ -14,13 +14,8 @@ import { NODE_COLORS }  from '../constants'
 import { toRFNode, toRFEdge } from '../utils/flowConvert'
 import { useTheme }     from '../hooks/useTheme'
 
-const toViewerNode = (node) => {
-  const rf = toRFNode(node)
-  return { ...rf, data: { ...rf.data, viewer: true } }
-}
-
 function ViewerCanvas({ mapData, theme }) {
-  const [nodes, , onNodesChange] = useNodesState(mapData.nodes.map(toViewerNode))
+  const [nodes, , onNodesChange] = useNodesState(mapData.nodes.map(n => toRFNode(n, { viewer: true })))
   const [edges, , onEdgesChange] = useEdgesState(mapData.edges.map((e, i) => toRFEdge(e, i)))
 
   return (

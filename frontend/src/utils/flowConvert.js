@@ -1,7 +1,7 @@
 import { MarkerType } from '@xyflow/react'
 import { GRID_SIZE, DEFAULT_EDGE_TYPE } from '../constants'
 
-export function toRFNode(node) {
+export function toRFNode(node, { viewer = false } = {}) {
   return {
     id: String(node.id),
     type: 'railNode',
@@ -14,6 +14,7 @@ export function toRFNode(node) {
       x: node.x,
       y: node.y,
       capacity: node.capacity,
+      viewer,
     },
   }
 }
