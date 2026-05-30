@@ -1,15 +1,5 @@
 import { useRef, useState } from 'react'
-import { NODE_COLORS, NODE_LABELS, TOOLS, EDGE_STYLES } from '../constants'
-
-const HINTS = {
-  pan:      'Drag to pan · scroll to zoom · click node/edge to select · Delete to remove',
-  station:  'Click canvas to place a Station',
-  platform: 'Click canvas to place a Platform',
-  junction: 'Click canvas to place a Junction',
-  depot:    'Click canvas to place a Depot',
-  waypoint: 'Click canvas to place a Waypoint',
-  endpoint: 'Click canvas to place an Endpoint',
-}
+import { NODE_COLORS, NODE_LABELS, TOOLS, TOOL_HINTS, EDGE_STYLES } from '../constants'
 
 export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload, onSave, saving, onRename, onRenameError = () => {}, edgeType, onEdgeTypeChange }) {
   const fileRef = useRef(null)
@@ -129,7 +119,7 @@ export function Toolbar({ activeTool, onToolChange, meta, onLoadFile, onDownload
       </div>
 
       <div className="toolbar-hint-bar">
-        {HINTS[activeTool] ?? ''}
+        {TOOL_HINTS[activeTool] ?? ''}
       </div>
     </>
   )

@@ -36,3 +36,13 @@ export const TOOLS = [
   { key: 'waypoint', label: 'Waypoint' },
   { key: 'endpoint', label: 'Endpoint' },
 ]
+
+export const TOOL_HINTS = {
+  pan:      'Drag to pan · scroll to zoom · click node/edge to select · Delete to remove',
+  station:  'Click canvas to place a Station',
+  platform: 'Click canvas to place a Platform',
+  junction: 'Click canvas to place a Junction',
+  depot:    'Click canvas to place a Depot',
+  waypoint: 'Click canvas to place a Waypoint',
+  endpoint: 'Click canvas to place an Endpoint',
+}
