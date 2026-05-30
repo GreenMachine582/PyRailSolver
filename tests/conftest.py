@@ -22,7 +22,7 @@ def client() -> TestClient:
 
 
 @pytest.fixture
-def json_map_file(tmp_path: Path) -> Generator[Path, None, None]:
+def json_map_file(tmp_path: Path) -> Generator[Path]:
     """Write a minimal valid map JSON into a temp dir and patch maps_dir to point there."""
     map_file = tmp_path / "test_map.json"
     map_file.write_text(json.dumps(_MINIMAL_MAP), encoding="utf-8")

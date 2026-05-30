@@ -3,7 +3,6 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-
 # ─── helpers ────────────────────────────────────────────
 
 
@@ -246,7 +245,8 @@ class TestAddEdge:
 
     def test_invalid_direction_returns_422(self, client: TestClient) -> None:
         _add_two_nodes(client)
-        r = client.post("/api/editor/edges", json={"from_id": 1, "to_id": 2, "direction": "sideways"})
+        r = client.post("/api/editor/edges",
+                        json={"from_id": 1, "to_id": 2, "direction": "sideways"})
         assert r.status_code == 422
 
 
@@ -256,38 +256,51 @@ class TestAddEdge:
 class TestUpdateEdge:
     def _setup(self, client: TestClient) -> None:
         _add_two_nodes(client)
-        client.post("/api/editor/edges", json={"from_id": 1, "to_id": 2, "cost": 10, "speed_limit": 80})
+        client.post("/api/editor/edges",
+                    json={"from_id": 1, "to_id": 2, "cost": 10, "speed_limit": 80})
 
     def test_returns_200(self, client: TestClient) -> None:
         self._setup(client)
-        r = client.put("/api/editor/edges/0", json={"direction": "bidirectional", "cost": 20, "distance": 2.0, "capacity": 1, "speed_limit": 100})
+        r = client.put("/api/editor/edges/0",
+                       json={"direction": "bidirectional", "cost": 20, "distance": 2.0,
+                             "capacity": 1, "speed_limit": 100})
         assert r.status_code == 200
 
     def test_cost_updated(self, client: TestClient) -> None:
         self._setup(client)
-        client.put("/api/editor/edges/0", json={"direction": "bidirectional", "cost": 42, "distance": 1.0, "capacity": 1, "speed_limit": 100})
+        client.put("/api/editor/edges/0",
+                   json={"direction": "bidirectional", "cost": 42, "distance": 1.0,
+                         "capacity": 1, "speed_limit": 100})
         data = client.get("/api/editor/state").json()
         assert data["edges"][0]["cost"] == 42
 
     def test_speed_updated(self, client: TestClient) -> None:
         self._setup(client)
-        client.put("/api/editor/edges/0", json={"direction": "bidirectional", "cost": 0, "distance": 1.0, "capacity": 1, "speed_limit": 55})
+        client.put("/api/editor/edges/0",
+                   json={"direction": "bidirectional", "cost": 0, "distance": 1.0,
+                         "capacity": 1, "speed_limit": 55})
         data = client.get("/api/editor/state").json()
         assert data["edges"][0]["speed_limit"] == 55
 
     def test_direction_updated(self, client: TestClient) -> None:
         self._setup(client)
-        client.put("/api/editor/edges/0", json={"direction": "forward", "cost": 0, "distance": 1.0, "capacity": 1, "speed_limit": 100})
+        client.put("/api/editor/edges/0",
+                   json={"direction": "forward", "cost": 0, "distance": 1.0,
+                         "capacity": 1, "speed_limit": 100})
         data = client.get("/api/editor/state").json()
         assert data["edges"][0]["direction"] == "forward"
 
     def test_out_of_bounds_returns_404(self, client: TestClient) -> None:
-        r = client.put("/api/editor/edges/99", json={"direction": "bidirectional", "cost": 0, "distance": 1.0, "capacity": 1, "speed_limit": 100})
+        r = client.put("/api/editor/edges/99",
+                       json={"direction": "bidirectional", "cost": 0, "distance": 1.0,
+                             "capacity": 1, "speed_limit": 100})
         assert r.status_code == 404
 
     def test_invalid_direction_returns_422(self, client: TestClient) -> None:
         self._setup(client)
-        r = client.put("/api/editor/edges/0", json={"direction": "diagonal", "cost": 0, "distance": 1.0, "capacity": 1, "speed_limit": 100})
+        r = client.put("/api/editor/edges/0",
+                       json={"direction": "diagonal", "cost": 0, "distance": 1.0,
+                             "capacity": 1, "speed_limit": 100})
         assert r.status_code == 422
 
 

@@ -91,7 +91,10 @@ class MapDataResponse(BaseModel):
 
 @router.get("", response_model=list[MapListItem])
 async def list_maps() -> list[MapListItem]:
-    return [MapListItem(name=_display_name(f), slug=f.stem, editable=_is_editable(f)) for f in _map_files()]
+    return [
+        MapListItem(name=_display_name(f), slug=f.stem, editable=_is_editable(f))
+        for f in _map_files()
+    ]
 
 
 @router.delete("/{name}")

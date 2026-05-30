@@ -172,7 +172,7 @@ async def export_map() -> Response:
 
 
 @router.post("/load")
-async def load_map(file: UploadFile = File(...)) -> MapData:
+async def load_map(file: UploadFile = File(...)) -> MapData:  # noqa: B008
     try:
         data = MapData.model_validate_json(await file.read())
     except Exception as exc:

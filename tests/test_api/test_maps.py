@@ -2,11 +2,7 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 from fastapi.testclient import TestClient
-
-from pydantic import ValidationError
-
 
 # ─── GET /api/maps ──────────────────────────────────────
 
@@ -34,7 +30,9 @@ class TestListMaps:
         item = next(i for i in items if i["slug"] == "tutorial_1")
         assert item["editable"] is False
 
-    def test_json_map_in_maps_dir_is_editable(self, client: TestClient, json_map_file: Path) -> None:
+    def test_json_map_in_maps_dir_is_editable(
+        self, client: TestClient, json_map_file: Path
+    ) -> None:
         items = client.get("/api/maps").json()
         item = next((i for i in items if i["slug"] == "test_map"), None)
         assert item is not None
