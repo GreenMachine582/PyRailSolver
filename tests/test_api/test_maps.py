@@ -57,6 +57,16 @@ class TestListMaps:
         assert item["name"] == "Override"
         assert item["editable"] is True
 
+    def test_unreadable_map_falls_back_to_stem(
+        self, client: TestClient, tmp_path: Path
+    ) -> None:
+        (tmp_path / "broken_map.json").write_text("not valid json", encoding="utf-8")
+        with patch("app.api.maps._maps_dir", return_value=tmp_path):
+            items = client.get("/api/maps").json()
+        item = next((i for i in items if i["slug"] == "broken_map"), None)
+        assert item is not None
+        assert item["name"] == "broken_map"
+
 
 # ─── GET /api/maps/{name} ───────────────────────────────
 
