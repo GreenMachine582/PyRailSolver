@@ -1,7 +1,8 @@
-import sys
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+
+import app.ui.views
 
 
 class TestEditorPage:
@@ -17,8 +18,7 @@ class TestEditorPage:
     def test_placeholder_when_not_built(
         self, client: TestClient, tmp_path: Path, monkeypatch: object
     ) -> None:
-        mod = sys.modules["app.editor.router"]
-        monkeypatch.setattr(mod, "_DIST", tmp_path / "missing")
+        monkeypatch.setattr(app.ui.views, "_REACT_INDEX", tmp_path / "missing.html")
         r = client.get("/editor")
         assert r.status_code == 200
         assert "not built" in r.text
