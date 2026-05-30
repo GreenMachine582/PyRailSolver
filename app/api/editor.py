@@ -71,12 +71,12 @@ def _dir(value: str) -> Direction:
         raise HTTPException(status_code=422, detail=f"Invalid direction: {value!r}") from None
 
 
-@router.get("/state")
+@router.get("/state", response_model=MapData)
 async def get_state() -> MapData:
     return editor.map_data
 
 
-@router.post("/nodes")
+@router.post("/nodes", response_model=MapData)
 async def add_node(req: _AddNodeReq) -> MapData:
     md = editor.map_data
     if not (0 <= req.x < md.meta.width and 0 <= req.y < md.meta.height):
@@ -85,14 +85,14 @@ async def add_node(req: _AddNodeReq) -> MapData:
     return editor.map_data
 
 
-@router.put("/nodes/{node_id}")
+@router.put("/nodes/{node_id}", response_model=MapData)
 async def update_node(node_id: int, req: _UpdateNodeReq) -> MapData:
     if not editor.update_node(node_id, req.name.strip(), _nt(req.node_type)):
         raise HTTPException(status_code=404, detail=f"Node {node_id} not found")
     return editor.map_data
 
 
-@router.patch("/nodes/{node_id}/position")
+@router.patch("/nodes/{node_id}/position", response_model=MapData)
 async def move_node(node_id: int, req: _MoveNodeReq) -> MapData:
     md = editor.map_data
     if not (0 <= req.x < md.meta.width and 0 <= req.y < md.meta.height):
@@ -102,14 +102,14 @@ async def move_node(node_id: int, req: _MoveNodeReq) -> MapData:
     return editor.map_data
 
 
-@router.delete("/nodes/{node_id}")
+@router.delete("/nodes/{node_id}", response_model=MapData)
 async def delete_node(node_id: int) -> MapData:
     if not editor.delete_node(node_id):
         raise HTTPException(status_code=404, detail=f"Node {node_id} not found")
     return editor.map_data
 
 
-@router.post("/edges")
+@router.post("/edges", response_model=MapData)
 async def add_edge(req: _AddEdgeReq) -> MapData:
     ids = {n.id for n in editor.map_data.nodes}
     if req.from_id not in ids:
@@ -124,7 +124,7 @@ async def add_edge(req: _AddEdgeReq) -> MapData:
     return editor.map_data
 
 
-@router.put("/edges/{edge_index}")
+@router.put("/edges/{edge_index}", response_model=MapData)
 async def update_edge(edge_index: int, req: _UpdateEdgeReq) -> MapData:
     if not editor.update_edge(edge_index, _dir(req.direction),
                                req.cost, req.distance, req.capacity, req.speed_limit,
@@ -133,7 +133,7 @@ async def update_edge(edge_index: int, req: _UpdateEdgeReq) -> MapData:
     return editor.map_data
 
 
-@router.delete("/edges/{edge_index}")
+@router.delete("/edges/{edge_index}", response_model=MapData)
 async def delete_edge(edge_index: int) -> MapData:
     if not editor.delete_edge(edge_index):
         raise HTTPException(status_code=404, detail=f"Edge {edge_index} not found")
@@ -144,7 +144,7 @@ class _RenameReq(BaseModel):
     name: str
 
 
-@router.patch("/meta")
+@router.patch("/meta", response_model=MapData)
 async def update_meta(req: _RenameReq) -> MapData:
     name = req.name.strip()
     if not name:
@@ -157,7 +157,7 @@ async def update_meta(req: _RenameReq) -> MapData:
     return editor.map_data
 
 
-@router.post("/save")
+@router.post("/save", response_model=dict[str, str])
 async def save_map() -> dict[str, str]:
     slug = _slugify(editor.map_data.meta.name)
     settings.maps_dir.mkdir(parents=True, exist_ok=True)
@@ -175,7 +175,7 @@ async def export_map() -> Response:
     )
 
 
-@router.post("/load")
+@router.post("/load", response_model=MapData)
 async def load_map(file: UploadFile = File(...)) -> MapData:  # noqa: B008
     try:
         data = MapData.model_validate_json(await file.read())
@@ -185,14 +185,14 @@ async def load_map(file: UploadFile = File(...)) -> MapData:  # noqa: B008
     return editor.map_data
 
 
-@router.post("/open/{name}")
+@router.post("/open/{name}", response_model=MapData)
 async def open_map(name: str) -> MapData:
     path = find_map_file(name)
     editor.load(load_map_file(path))
     return editor.map_data
 
 
-@router.post("/reset")
+@router.post("/reset", response_model=MapData)
 async def reset_state() -> MapData:
     editor.reset()
     return editor.map_data
