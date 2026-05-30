@@ -3,6 +3,8 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+import app.api.editor as _editor_api
+
 # ─── helpers ────────────────────────────────────────────
 
 
@@ -493,3 +495,70 @@ class TestUpdateMeta:
         # "test map" → slug "test_map", which exists via json_map_file fixture
         r = client.patch("/api/editor/meta", json={"name": "test map"})
         assert r.status_code == 409
+
+
+# ─── POST /api/editor/save ──────────────────────────────
+
+
+class TestSaveMap:
+    def test_returns_200(self, client: TestClient, tmp_path: Path, monkeypatch: object) -> None:
+        monkeypatch.setattr(_editor_api.settings, "maps_dir", tmp_path)
+        assert client.post("/api/editor/save").status_code == 200
+
+    def test_returns_filename_key(
+        self, client: TestClient, tmp_path: Path, monkeypatch: object
+    ) -> None:
+        monkeypatch.setattr(_editor_api.settings, "maps_dir", tmp_path)
+        r = client.post("/api/editor/save")
+        assert "filename" in r.json()
+
+    def test_filename_derived_from_map_name(
+        self, client: TestClient, tmp_path: Path, monkeypatch: object
+    ) -> None:
+        # Default name "Untitled Map" → slug "Untitled_Map"
+        monkeypatch.setattr(_editor_api.settings, "maps_dir", tmp_path)
+        r = client.post("/api/editor/save")
+        assert r.json()["filename"] == "Untitled_Map.json"
+
+    def test_file_written_to_maps_dir(
+        self, client: TestClient, tmp_path: Path, monkeypatch: object
+    ) -> None:
+        monkeypatch.setattr(_editor_api.settings, "maps_dir", tmp_path)
+        client.post("/api/editor/save")
+        assert (tmp_path / "Untitled_Map.json").exists()
+
+    def test_file_content_matches_state(
+        self, client: TestClient, tmp_path: Path, monkeypatch: object
+    ) -> None:
+        monkeypatch.setattr(_editor_api.settings, "maps_dir", tmp_path)
+        _add_node(client, 3, 4, "Mine")
+        client.post("/api/editor/save")
+        saved = json.loads((tmp_path / "Untitled_Map.json").read_text())
+        assert len(saved["nodes"]) == 1
+        assert saved["nodes"][0]["name"] == "Mine"
+
+    def test_slug_uses_custom_name(
+        self, client: TestClient, tmp_path: Path, monkeypatch: object
+    ) -> None:
+        monkeypatch.setattr(_editor_api.settings, "maps_dir", tmp_path)
+        client.patch("/api/editor/meta", json={"name": "My Cool Map"})
+        r = client.post("/api/editor/save")
+        assert r.json()["filename"] == "My_Cool_Map.json"
+
+    def test_maps_dir_created_if_missing(
+        self, client: TestClient, tmp_path: Path, monkeypatch: object
+    ) -> None:
+        save_dir = tmp_path / "new_subdir"
+        monkeypatch.setattr(_editor_api.settings, "maps_dir", save_dir)
+        assert not save_dir.exists()
+        client.post("/api/editor/save")
+        assert save_dir.exists()
+
+    def test_slug_fallback_to_untitled(
+        self, client: TestClient, tmp_path: Path, monkeypatch: object
+    ) -> None:
+        # Name of only special chars produces empty slug → falls back to "untitled"
+        monkeypatch.setattr(_editor_api.settings, "maps_dir", tmp_path)
+        client.patch("/api/editor/meta", json={"name": "!!!"})
+        r = client.post("/api/editor/save")
+        assert r.json()["filename"] == "untitled.json"
