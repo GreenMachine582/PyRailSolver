@@ -39,7 +39,9 @@ export function RailNode({ data, selected }) {
       {isCircle ? (
         <>
           <div className="rail-node-circle" style={{ background: color, boxShadow: shadow }} />
-          <div className="rail-node-label">{data.label || NODE_LABELS[data.nodeType] || data.nodeType}</div>
+          <div className="rail-node-label" style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', paddingTop: 3 }}>
+            {data.label || NODE_LABELS[data.nodeType] || data.nodeType}
+          </div>
         </>
       ) : (
         <div className="rail-node-rect" style={{ background: color, boxShadow: shadow }}>

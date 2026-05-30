@@ -163,7 +163,7 @@ html, body { margin: 0; height: 100%; background: var(--bs-body-bg); color: var(
 /* ─── Rail node ────────────────────────────────────────── */
 .rail-node-wrapper {
   text-align: center;
-  padding: 4px 0 2px;
+  position: relative;
 }
 
 .rail-node-circle {
