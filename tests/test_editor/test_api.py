@@ -452,3 +452,44 @@ class TestOpenMap:
 
     def test_not_found_returns_404(self, client: TestClient, json_map_file: Path) -> None:
         assert client.post("/api/editor/open/nonexistent").status_code == 404
+
+
+# ─── PATCH /api/editor/meta ─────────────────────────────
+
+
+class TestUpdateMeta:
+    def test_returns_200(self, client: TestClient) -> None:
+        r = client.patch("/api/editor/meta", json={"name": "My Map"})
+        assert r.status_code == 200
+
+    def test_name_updated_in_state(self, client: TestClient) -> None:
+        client.patch("/api/editor/meta", json={"name": "Renamed"})
+        state = client.get("/api/editor/state").json()
+        assert state["meta"]["name"] == "Renamed"
+
+    def test_response_reflects_new_name(self, client: TestClient) -> None:
+        r = client.patch("/api/editor/meta", json={"name": "New Name"})
+        assert r.json()["meta"]["name"] == "New Name"
+
+    def test_name_stripped(self, client: TestClient) -> None:
+        client.patch("/api/editor/meta", json={"name": "  Trimmed  "})
+        state = client.get("/api/editor/state").json()
+        assert state["meta"]["name"] == "Trimmed"
+
+    def test_blank_name_returns_422(self, client: TestClient) -> None:
+        assert client.patch("/api/editor/meta", json={"name": ""}).status_code == 422
+
+    def test_whitespace_only_returns_422(self, client: TestClient) -> None:
+        assert client.patch("/api/editor/meta", json={"name": "   "}).status_code == 422
+
+    def test_rename_to_same_name_returns_200(self, client: TestClient) -> None:
+        current = client.get("/api/editor/state").json()["meta"]["name"]
+        r = client.patch("/api/editor/meta", json={"name": current})
+        assert r.status_code == 200
+
+    def test_slug_conflict_returns_409(
+        self, client: TestClient, json_map_file: Path
+    ) -> None:
+        # "test map" → slug "test_map", which exists via json_map_file fixture
+        r = client.patch("/api/editor/meta", json={"name": "test map"})
+        assert r.status_code == 409
