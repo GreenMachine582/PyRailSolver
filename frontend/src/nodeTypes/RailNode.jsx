@@ -51,3 +51,5 @@ export function RailNode({ data, selected }) {
     </div>
   )
 }
+
+export const NODE_TYPES = { railNode: RailNode }

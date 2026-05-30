@@ -9,12 +9,10 @@ import '@xyflow/react/dist/style.css'
 
 import { api }          from '../api'
 import { PageLayout }   from '../components/PageLayout'
-import { RailNode }     from '../nodeTypes/RailNode'
+import { NODE_TYPES }   from '../nodeTypes/RailNode'
 import { NODE_COLORS }  from '../constants'
 import { toRFNode, toRFEdge } from '../utils/flowConvert'
 import { useTheme }     from '../hooks/useTheme'
-
-const NODE_TYPES = { railNode: RailNode }
 
 const toViewerNode = (node) => {
   const rf = toRFNode(node)

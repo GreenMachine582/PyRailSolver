@@ -8,7 +8,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
-import { RailNode }        from '../nodeTypes/RailNode'
+import { NODE_TYPES }      from '../nodeTypes/RailNode'
 import { Toolbar }         from '../components/Toolbar'
 import { PropertiesPanel } from '../components/PropertiesPanel'
 import { EdgeDialog }      from '../components/EdgeDialog'
@@ -19,8 +19,6 @@ import { api }             from '../api'
 import { GRID_SIZE, NODE_COLORS, DEFAULT_EDGE_TYPE } from '../constants'
 import { toRFNode, toRFEdge }     from '../utils/flowConvert'
 import { useTheme }               from '../hooks/useTheme'
-
-const NODE_TYPES = { railNode: RailNode }
 
 function EditorInner() {
   const [nodes, setNodes, onNodesChange] = useNodesState([])
