@@ -12,6 +12,10 @@ from app.parser.models import Direction, MapData, NodeType
 router = APIRouter(prefix="/api/editor", tags=["editor-api"])
 
 
+def _slugify(name: str) -> str:
+    return re.sub(r"[^\w\-]", "_", name).strip("_") or "untitled"
+
+
 class _AddNodeReq(BaseModel):
     x: int
     y: int
@@ -146,7 +150,7 @@ async def update_meta(req: _RenameReq) -> MapData:
     if not name:
         raise HTTPException(status_code=422, detail="Name cannot be blank")
     if name != editor.map_data.meta.name:
-        slug = re.sub(r"[^\w\-]", "_", name).strip("_") or "untitled"
+        slug = _slugify(name)
         if slug in map_names() or (settings.maps_dir / f"{slug}.json").exists():
             raise HTTPException(status_code=409, detail=f"A map named '{name}' already exists")
     editor.rename(name)
@@ -155,7 +159,7 @@ async def update_meta(req: _RenameReq) -> MapData:
 
 @router.post("/save")
 async def save_map() -> dict[str, str]:
-    slug = re.sub(r"[^\w\-]", "_", editor.map_data.meta.name).strip("_") or "untitled"
+    slug = _slugify(editor.map_data.meta.name)
     settings.maps_dir.mkdir(parents=True, exist_ok=True)
     path = settings.maps_dir / f"{slug}.json"
     path.write_text(editor.map_data.model_dump_json(indent=2), encoding="utf-8")
