@@ -37,6 +37,17 @@ export const TOOLS = [
   { key: 'endpoint', label: 'Endpoint' },
 ]
 
+// #40916c = --rs-500 (brand green) from editor.css
+export const NODE_HANDLE_STYLE = {
+  width:      8,
+  height:     8,
+  background: '#40916c',
+  border:     '1px solid white',
+}
+
+export const NODE_SHADOW_SELECTED = '0 0 0 3px #ffc107, 0 0 8px rgba(255,193,7,0.6)'
+export const NODE_SHADOW_DEFAULT  = '0 0 0 2px white'
+
 export const TOOL_HINTS = {
   pan:      'Drag to pan · scroll to zoom · click node/edge to select · Delete to remove',
   station:  'Click canvas to place a Station',

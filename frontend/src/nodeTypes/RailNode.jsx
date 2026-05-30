@@ -1,12 +1,5 @@
 import { Handle, Position } from '@xyflow/react'
-import { NODE_COLORS, NODE_LABELS } from '../constants'
-
-const HANDLE_STYLE = {
-  width: 8,
-  height: 8,
-  background: '#40916c',
-  border: '1px solid white',
-}
+import { NODE_COLORS, NODE_LABELS, NODE_HANDLE_STYLE, NODE_SHADOW_SELECTED, NODE_SHADOW_DEFAULT } from '../constants'
 
 const HANDLES = [
   { position: Position.Top,    id: 't' },
@@ -21,18 +14,16 @@ const HANDLES = [
 const CIRCLE_TYPES = new Set(['junction', 'waypoint'])
 
 export function RailNode({ data, selected }) {
-  const color = NODE_COLORS[data.nodeType] || '#6c757d'
+  const color    = NODE_COLORS[data.nodeType] || '#6c757d'
   const isCircle = CIRCLE_TYPES.has(data.nodeType)
-  const shadow = selected
-    ? '0 0 0 3px #ffc107, 0 0 8px rgba(255,193,7,0.6)'
-    : '0 0 0 2px white'
+  const shadow   = selected ? NODE_SHADOW_SELECTED : NODE_SHADOW_DEFAULT
 
   return (
     <div className="rail-node-wrapper">
       {HANDLES.map(({ position, id }) => (
         <Handle
           key={id} type="source" position={position} id={id}
-          style={data.viewer ? { ...HANDLE_STYLE, visibility: 'hidden', pointerEvents: 'none' } : HANDLE_STYLE}
+          style={data.viewer ? { ...NODE_HANDLE_STYLE, visibility: 'hidden', pointerEvents: 'none' } : NODE_HANDLE_STYLE}
         />
       ))}
 
