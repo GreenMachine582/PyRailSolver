@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { EDGE_STYLES, DEFAULT_EDGE_TYPE } from '../constants'
+import { buildEdgePayload } from '../utils/flowConvert'
 
 export function EdgeDialog({ connection, nodes, defaultEdgeType = DEFAULT_EDGE_TYPE, onConfirm, onCancel }) {
   const [direction, setDirection] = useState('bidirectional')
@@ -79,7 +80,7 @@ export function EdgeDialog({ connection, nodes, defaultEdgeType = DEFAULT_EDGE_T
           <div className="d-flex gap-2">
             <button
               className="btn btn-primary btn-sm"
-              onClick={() => onConfirm({ direction, cost, distance, capacity, speed_limit: speed, edge_type: edgeType })}
+              onClick={() => onConfirm(buildEdgePayload({ direction, cost, distance, capacity, speed, edgeType }))}
             >Draw</button>
             <button className="btn btn-outline-secondary btn-sm" onClick={onCancel}>Cancel</button>
           </div>

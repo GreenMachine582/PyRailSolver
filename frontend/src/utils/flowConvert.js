@@ -18,6 +18,22 @@ export function toRFNode(node) {
   }
 }
 
+export function buildEdgePayload({
+  direction, cost, distance, capacity, speed, edgeType,
+  sourceHandle = '', targetHandle = '',
+}) {
+  return {
+    direction,
+    cost,
+    distance,
+    capacity,
+    speed_limit:   speed,
+    edge_type:     edgeType,
+    source_handle: sourceHandle,
+    target_handle: targetHandle,
+  }
+}
+
 export function toRFEdge(edge, index) {
   const directed = edge.direction !== 'bidirectional'
   return {

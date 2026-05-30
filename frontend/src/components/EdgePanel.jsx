@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { EDGE_STYLES, DEFAULT_EDGE_TYPE } from '../constants'
+import { buildEdgePayload } from '../utils/flowConvert'
 import { ConfirmDialog } from './ConfirmDialog'
 
 export function EdgePanel({ data, nodes, onSave, onDelete }) {
@@ -67,12 +68,11 @@ export function EdgePanel({ data, nodes, onSave, onDelete }) {
         <div className="props-actions">
           <button
             className="btn btn-primary btn-sm"
-            onClick={() => onSave(data.index, {
-              direction, cost, distance, capacity,
-              speed_limit: speed, edge_type: edgeType,
-              source_handle: data.source_handle || '',
-              target_handle: data.target_handle || '',
-            })}
+            onClick={() => onSave(data.index, buildEdgePayload({
+              direction, cost, distance, capacity, speed, edgeType,
+              sourceHandle: data.source_handle || '',
+              targetHandle: data.target_handle || '',
+            }))}
           >Save</button>
           <button
             className="btn btn-outline-danger btn-sm"
